@@ -396,3 +396,19 @@ reusing instead).
   rank the three technologies differently — wind onshore has the
   smallest capacity-factor error but the largest absolute (GW) one,
   simply because it carries the most capacity.
+
+### 2026-08-26 — Direct answer added: does curtailment-adjusted potential match SMARD?
+
+- User asked directly how well potential matches SMARD *after*
+  subtracting redispatch curtailment — `17_analyse_curtailment_gap.py`
+  hadn't actually built that comparison, only the gap-vs-redispatch
+  overlay and an "explained share" ratio. Added a proper before/after
+  match-quality table (`mae_gwh`, `bias_gwh`, `nmae_pct`, `corr`), monthly
+  granularity (matching redispatch data's own resolution), both "before"
+  and "after" computed the same way so the comparison is apples-to-apples
+  even though not directly comparable to notebook 16's hourly numbers.
+  Result: wind offshore improves sharply (nMAE 24.5% → 8.0%, matching its
+  70.7%-explained share), wind onshore meaningfully (9.4% → 6.7%), solar
+  barely (21.1% → 19.0%) — consistent with redispatch never being solar's
+  main gap driver. Also added the residual as % of that month's observed
+  generation (not just absolute GWh) for the same reason.

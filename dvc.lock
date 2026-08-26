@@ -649,8 +649,8 @@ stages:
       size: 2353887
     - path: pipeline/17_analyse_curtailment_gap.py
       hash: md5
-      md5: 626f689cdd46fb4a5550df51f92a90fe
-      size: 9900
+      md5: ac13156c5efa9b5ccdb1a09972ba0bb0
+      size: 12336
     - path: pkg/potential.py
       hash: md5
       md5: 4903a9611474cc88c7eb97eef4a7b4b8
@@ -658,8 +658,8 @@ stages:
     outs:
     - path: book/notebooks/17_analyse_curtailment_gap.ipynb
       hash: md5
-      md5: 2bfc2dda01065fd7fd0cea22dd24a6db
-      size: 21389
+      md5: 8055c5f209b9b4988c5e67034609e893
+      size: 30438
     - path: output/images/17_gap_by_price_sign.png
       hash: md5
       md5: cea8249c998709ab99f733a919821bb2

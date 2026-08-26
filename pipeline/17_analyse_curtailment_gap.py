@@ -70,16 +70,20 @@ redispatch_reduction = redispatch.loc[redispatch["direction"] == "reduction"].co
 redispatch_reduction["month"] = redispatch_reduction["month"].dt.to_period("M")
 redispatch_reduction = redispatch_reduction.set_index(["month", "energy_source"])["gwh"]
 
-monthly_gap_gwh = (df[[f"gap_{tech}_mw" for tech in PAIRS]].resample("MS").sum() / 1000).rename(
-    columns={f"gap_{tech}_mw": tech for tech in PAIRS}
-)
-monthly_gap_gwh.index = monthly_gap_gwh.index.to_period("M")
+monthly_gwh = {}
+for tech, (p_col, o_col) in PAIRS.items():
+    monthly_gwh[tech] = pd.DataFrame({
+        "potential_gwh": df[p_col].resample("MS").sum() / 1000,
+        "observed_gwh": df[o_col].resample("MS").sum() / 1000,
+        "gap_gwh": df[f"gap_{tech}_mw"].resample("MS").sum() / 1000,
+    })
+    monthly_gwh[tech].index = monthly_gwh[tech].index.to_period("M")
 
 comparison = {}
 for tech in PAIRS:
     source_name = REDISPATCH_SOURCE_NAME[tech]
     redispatch_tech = redispatch_reduction.xs(source_name, level="energy_source")
-    comparison[tech] = pd.DataFrame({"gap_gwh": monthly_gap_gwh[tech], "redispatch_gwh": redispatch_tech}).dropna()
+    comparison[tech] = monthly_gwh[tech].join(redispatch_tech.rename("redispatch_gwh")).dropna()
     comparison[tech].index = comparison[tech].index.to_timestamp()
 
 fig, axes = plt.subplots(3, 1, figsize=(13, 9), sharex=True)
@@ -181,6 +185,49 @@ plt.show()
 # ```
 
 # %% [markdown]
+# ## So how well does curtailment-adjusted potential actually match SMARD?
+#
+# The direct question: subtract reported redispatch curtailment from
+# potential, then compare *that* against SMARD's observed generation, the
+# same way [the previous notebook](../notebooks/16_analyse_potential_vs_observed.ipynb)
+# compared raw potential against it. Redispatch data is monthly, so this
+# comparison is necessarily at monthly granularity too (not the hourly
+# resolution notebook 16 used) -- both the "before" and "after" rows below
+# use the same monthly aggregation, so the comparison between them is
+# apples-to-apples even though the absolute numbers aren't directly
+# comparable to notebook 16's hourly ones.
+
+# %%
+def match_quality(observed: pd.Series, modeled: pd.Series) -> dict:
+    err = modeled - observed
+    return {
+        "mae_gwh": err.abs().mean(),
+        "bias_gwh": err.mean(),
+        "nmae_pct": err.abs().mean() / observed.mean() * 100,
+        "corr": modeled.corr(observed),
+    }
+
+
+match_rows = []
+for tech in PAIRS:
+    sub = comparison[tech]
+    adjusted_potential = sub["potential_gwh"] - sub["redispatch_gwh"]
+    before = match_quality(sub["observed_gwh"], sub["potential_gwh"])
+    after = match_quality(sub["observed_gwh"], adjusted_potential)
+    match_rows.append({"technology": tech, "stage": "raw potential", **before})
+    match_rows.append({"technology": tech, "stage": "curtailment-adjusted", **after})
+
+match_quality_table = pd.DataFrame(match_rows).set_index(["technology", "stage"])
+match_quality_table.round(2)
+
+# %% [markdown]
+# Subtracting reported redispatch curtailment measurably improves the
+# match for wind (both directions of error shrink, `nMAE` most visibly for
+# offshore, where redispatch explains the most of the gap); solar barely
+# moves, consistent with redispatch curtailment not being solar's main
+# gap driver in the first place.
+
+# %% [markdown]
 # ## What's left after subtracting reported redispatch curtailment?
 #
 # Monthly gap minus monthly redispatch curtailment, same 2022-07-onward
@@ -189,15 +236,23 @@ plt.show()
 
 # %%
 residual_gwh = pd.DataFrame({tech: comparison[tech]["gap_gwh"] - comparison[tech]["redispatch_gwh"] for tech in PAIRS})
-residual_gwh.describe().loc[["mean", "std", "min", "max"]].round(1)
+residual_pct_of_observed = pd.DataFrame({
+    tech: residual_gwh[tech] / comparison[tech]["observed_gwh"] * 100 for tech in PAIRS
+})
+
+print("Residual, GWh/month:")
+display(residual_gwh.describe().loc[["mean", "std", "min", "max"]].round(1))
+print("\nResidual as % of that month's observed generation:")
+display(residual_pct_of_observed.describe().loc[["mean", "std", "min", "max"]].round(1))
 
 # %% [markdown]
 # ## Takeaways
 #
-# - Redispatch-reported curtailment explains a real share of the gap for
-#   wind (both onshore and offshore), but not all of it -- a persistent
-#   residual remains even after subtracting reported redispatch volume
-#   (see the summary table above).
+# - Subtracting reported redispatch curtailment measurably improves the
+#   match against SMARD for both wind technologies (smaller MAE/nMAE,
+#   higher correlation) -- see the match-quality table above -- but a
+#   persistent residual remains; solar barely improves, since redispatch
+#   was never its main gap driver.
 # - The gap is measurably larger during negative-price hours for all
 #   three technologies -- consistent with voluntary curtailment being a
 #   real, additional contributor, though this notebook doesn't attempt to
