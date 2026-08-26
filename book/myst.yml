@@ -12,9 +12,6 @@ project:
   github: your-username/your-repo-name
   toc:
     - file: markdown/index.md
-    - title: Analysis
-      children:
-        - file: notebooks/02_analyse_example.ipynb
 site:
   options:
     folders: true

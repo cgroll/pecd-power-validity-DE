@@ -40,3 +40,203 @@ stages:
       hash: md5
       md5: 8e7046ced1ffd391bdfced90bf04fd34
       size: 179776
+  fetch_external_capacity_panels:
+    cmd: uv run python pipeline/07_fetch_external_capacity_panels.py
+    deps:
+    - path: pipeline/07_fetch_external_capacity_panels.py
+      hash: md5
+      md5: 0ce248adf5f20e0cfb2dbce4f3a7e2fc
+      size: 2197
+    outs:
+    - path: data/downloads/external/capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: dd1d6f1b803629ed59f3b944ccd7e589
+      size: 330102
+    - path: data/downloads/external/capacity_by_offshore_month.parquet
+      hash: md5
+      md5: b6aea9a7c36065dc1624603074adf573
+      size: 5615
+    - path: data/downloads/external/capacity_by_peof_month.parquet
+      hash: md5
+      md5: 80e7b4e9fae9fdbb32bea88160373ad2
+      size: 7259
+    - path: data/downloads/external/capacity_by_peon_month.parquet
+      hash: md5
+      md5: 007d9f28994339deb239fc0e2d35a333
+      size: 21238
+    - path: data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: 7c150064c796ba705c1d9ec00abae5f1
+      size: 154691
+  download_smard:
+    cmd: uv run python pipeline/03_download_smard.py
+    deps:
+    - path: pipeline/03_download_smard.py
+      hash: md5
+      md5: 4b81ecf61c1212eb5f131f2289ba1e35
+      size: 2277
+    - path: pkg/smard.py
+      hash: md5
+      md5: 0c1dbf1048bf3c42532b764544ded0e7
+      size: 2871
+    outs:
+    - path: data/downloads/smard/load.parquet
+      hash: md5
+      md5: eb9d2aef60a10353e8bc54d02b331892
+      size: 1001971
+    - path: data/downloads/smard/price_de_lu.parquet
+      hash: md5
+      md5: ca35519f46a60325921e97265fa3ca76
+      size: 796860
+    - path: data/downloads/smard/pv.parquet
+      hash: md5
+      md5: 25eba4284b9d1874cae848550cffe2f0
+      size: 984819
+    - path: data/downloads/smard/wind_offshore.parquet
+      hash: md5
+      md5: eb59824312a78181e55ed65e996415d1
+      size: 860757
+    - path: data/downloads/smard/wind_onshore.parquet
+      hash: md5
+      md5: 893706bbd246aa46b820979a06236287
+      size: 1136454
+  download_redispatch_by_source:
+    cmd: uv run python pipeline/05_download_redispatch_by_source.py
+    deps:
+    - path: pipeline/05_download_redispatch_by_source.py
+      hash: md5
+      md5: e61407680ee510b0b2b072009a7fec29
+      size: 1319
+    - path: pkg/smard_redispatch.py
+      hash: md5
+      md5: 1600fc29404ff48f3af21d6a0f57830b
+      size: 5342
+    outs:
+    - path: data/downloads/smard/redispatch_by_source.parquet
+      hash: md5
+      md5: 1f60269901d9dc4317f145582c6caf00
+      size: 8974
+  download_smard_capacities:
+    cmd: uv run python pipeline/04_download_smard_capacities.py
+    deps:
+    - path: pipeline/04_download_smard_capacities.py
+      hash: md5
+      md5: 99a4e567a66788a1be46de834c83e573
+      size: 2123
+    - path: pkg/smard.py
+      hash: md5
+      md5: 0c1dbf1048bf3c42532b764544ded0e7
+      size: 2871
+    outs:
+    - path: data/downloads/smard/capacity_solar.parquet
+      hash: md5
+      md5: 994a1c134374c48c8428d5f367df9b53
+      size: 862337
+    - path: data/downloads/smard/capacity_wind_offshore.parquet
+      hash: md5
+      md5: 9836787ca872bba02993fc8f06c91270
+      size: 862365
+    - path: data/downloads/smard/capacity_wind_onshore.parquet
+      hash: md5
+      md5: 00cdf050a4ee8790e3ff9d00505a4e0b
+      size: 862373
+  download_redispatch_measures:
+    cmd: uv run python pipeline/06_download_redispatch_measures.py
+    deps:
+    - path: pipeline/06_download_redispatch_measures.py
+      hash: md5
+      md5: c9e6bb47216268abf1acef123170dd7a
+      size: 946
+    - path: pkg/redispatch_measures.py
+      hash: md5
+      md5: f7561afeba21582bf154355fa2944681
+      size: 7275
+    outs:
+    - path: data/downloads/netztransparenz/redispatch_measures.csv
+      hash: md5
+      md5: b8cc993c9458c37669a7f959e149d5c3
+      size: 16343084
+  download_pecd_capacity_factors:
+    cmd: uv run python pipeline/01_download_pecd_capacity_factors.py
+    deps:
+    - path: pipeline/01_download_pecd_capacity_factors.py
+      hash: md5
+      md5: 00a7e4f9537ea8115a83857e1c510987
+      size: 2760
+    - path: pkg/cds.py
+      hash: md5
+      md5: c0e79a311cec61fde6dba3bb72ee2113
+      size: 1211
+    outs:
+    - path: data/downloads/pecd/pecd_solar_tech60.zip
+      hash: md5
+      md5: 8f23b48e2ed5b967b096f5699789d7d6
+      size: 91424532
+    - path: data/downloads/pecd/pecd_solar_tech61.zip
+      hash: md5
+      md5: b1ca0afbe476583b5fbb2aa9a028d300
+      size: 91884151
+    - path: data/downloads/pecd/pecd_solar_tech62.zip
+      hash: md5
+      md5: 2185f564f32b50159bc262e3b528a5a6
+      size: 92283744
+    - path: data/downloads/pecd/pecd_solar_tech63.zip
+      hash: md5
+      md5: 15f9ec611ac5926bc6e3e0dce7ddfc83
+      size: 92643407
+    - path: data/downloads/pecd/pecd_wind_offshore_tech20.zip
+      hash: md5
+      md5: 7d4a95891e231dc85fa52606d4c494d2
+      size: 11694866
+    - path: data/downloads/pecd/pecd_wind_onshore_tech30.zip
+      hash: md5
+      md5: f3a9d3ca0ab3caf49757fb3f884e6856
+      size: 29414601
+  process_pecd_capacity_factors:
+    cmd: uv run python pipeline/02_process_pecd_capacity_factors.py
+    deps:
+    - path: data/downloads/pecd/pecd_solar_tech60.zip
+      hash: md5
+      md5: 8f23b48e2ed5b967b096f5699789d7d6
+      size: 91424532
+    - path: data/downloads/pecd/pecd_solar_tech61.zip
+      hash: md5
+      md5: b1ca0afbe476583b5fbb2aa9a028d300
+      size: 91884151
+    - path: data/downloads/pecd/pecd_solar_tech62.zip
+      hash: md5
+      md5: 2185f564f32b50159bc262e3b528a5a6
+      size: 92283744
+    - path: data/downloads/pecd/pecd_solar_tech63.zip
+      hash: md5
+      md5: 15f9ec611ac5926bc6e3e0dce7ddfc83
+      size: 92643407
+    - path: data/downloads/pecd/pecd_wind_offshore_tech20.zip
+      hash: md5
+      md5: 7d4a95891e231dc85fa52606d4c494d2
+      size: 11694866
+    - path: data/downloads/pecd/pecd_wind_onshore_tech30.zip
+      hash: md5
+      md5: f3a9d3ca0ab3caf49757fb3f884e6856
+      size: 29414601
+    - path: pipeline/02_process_pecd_capacity_factors.py
+      hash: md5
+      md5: fcdc281df29216bcd2fd823ad979a00a
+      size: 3000
+    - path: pkg/pecd_io.py
+      hash: md5
+      md5: 9e708f2a6217daed456684e6bccf7b57
+      size: 1812
+    outs:
+    - path: data/processed/pecd_solar_capacity_factors.parquet
+      hash: md5
+      md5: f1ac7e3e0f6162d5e04aac0f3a84e1f9
+      size: 51558551
+    - path: data/processed/pecd_wind_offshore_capacity_factors.parquet
+      hash: md5
+      md5: fc0302a6df4558f45f41a11788b71060
+      size: 2929080
+    - path: data/processed/pecd_wind_onshore_capacity_factors.parquet
+      hash: md5
+      md5: 0284b97259860845add1711ae124e113
+      size: 2296648

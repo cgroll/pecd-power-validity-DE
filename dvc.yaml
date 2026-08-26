@@ -1,27 +1,99 @@
 stages:
-  download_example:
-    cmd: uv run python pipeline/01_download_example.py
+  download_pecd_capacity_factors:
+    cmd: uv run python pipeline/01_download_pecd_capacity_factors.py
     deps:
-      - pipeline/01_download_example.py
+      - pipeline/01_download_pecd_capacity_factors.py
+      - pkg/cds.py
     outs:
-      - data/downloads/example_data.parquet:
+      - data/downloads/pecd/pecd_solar_tech60.zip:
+          persist: true
+      - data/downloads/pecd/pecd_solar_tech61.zip:
+          persist: true
+      - data/downloads/pecd/pecd_solar_tech62.zip:
+          persist: true
+      - data/downloads/pecd/pecd_solar_tech63.zip:
+          persist: true
+      - data/downloads/pecd/pecd_wind_onshore_tech30.zip:
+          persist: true
+      - data/downloads/pecd/pecd_wind_offshore_tech20.zip:
           persist: true
 
-  process_example:
-    cmd: >-
-      MPLBACKEND=Agg uv run jupytext --to notebook --execute
-      --set-kernel python3
-      --output book/notebooks/02_analyse_example.ipynb
-      pipeline/02_analyse_example.py &&
-      uv run python pipeline/_strip_jupytext_metadata.py
-      book/notebooks/02_analyse_example.ipynb
+  process_pecd_capacity_factors:
+    cmd: uv run python pipeline/02_process_pecd_capacity_factors.py
     deps:
-      - pipeline/02_analyse_example.py
-      - data/downloads/example_data.parquet
+      - pipeline/02_process_pecd_capacity_factors.py
+      - pkg/pecd_io.py
+      - data/downloads/pecd/pecd_solar_tech60.zip
+      - data/downloads/pecd/pecd_solar_tech61.zip
+      - data/downloads/pecd/pecd_solar_tech62.zip
+      - data/downloads/pecd/pecd_solar_tech63.zip
+      - data/downloads/pecd/pecd_wind_onshore_tech30.zip
+      - data/downloads/pecd/pecd_wind_offshore_tech20.zip
     outs:
-      - book/notebooks/02_analyse_example.ipynb:
-          cache: false
-      - output/images/02_daily_average.png:
-          cache: false
-      - output/images/02_category_dist.png:
-          cache: false
+      - data/processed/pecd_solar_capacity_factors.parquet
+      - data/processed/pecd_wind_onshore_capacity_factors.parquet
+      - data/processed/pecd_wind_offshore_capacity_factors.parquet
+
+  download_smard:
+    cmd: uv run python pipeline/03_download_smard.py
+    deps:
+      - pipeline/03_download_smard.py
+      - pkg/smard.py
+    outs:
+      - data/downloads/smard/pv.parquet:
+          persist: true
+      - data/downloads/smard/wind_onshore.parquet:
+          persist: true
+      - data/downloads/smard/wind_offshore.parquet:
+          persist: true
+      - data/downloads/smard/load.parquet:
+          persist: true
+      - data/downloads/smard/price_de_lu.parquet:
+          persist: true
+
+  download_smard_capacities:
+    cmd: uv run python pipeline/04_download_smard_capacities.py
+    deps:
+      - pipeline/04_download_smard_capacities.py
+      - pkg/smard.py
+    outs:
+      - data/downloads/smard/capacity_solar.parquet:
+          persist: true
+      - data/downloads/smard/capacity_wind_onshore.parquet:
+          persist: true
+      - data/downloads/smard/capacity_wind_offshore.parquet:
+          persist: true
+
+  download_redispatch_by_source:
+    cmd: uv run python pipeline/05_download_redispatch_by_source.py
+    deps:
+      - pipeline/05_download_redispatch_by_source.py
+      - pkg/smard_redispatch.py
+    outs:
+      - data/downloads/smard/redispatch_by_source.parquet:
+          persist: true
+
+  download_redispatch_measures:
+    cmd: uv run python pipeline/06_download_redispatch_measures.py
+    deps:
+      - pipeline/06_download_redispatch_measures.py
+      - pkg/redispatch_measures.py
+    outs:
+      - data/downloads/netztransparenz/redispatch_measures.csv:
+          persist: true
+
+  fetch_external_capacity_panels:
+    cmd: uv run python pipeline/07_fetch_external_capacity_panels.py
+    deps:
+      - pipeline/07_fetch_external_capacity_panels.py
+    outs:
+      - data/downloads/external/capacity_by_peon_month.parquet:
+          persist: true
+      - data/downloads/external/capacity_by_peof_month.parquet:
+          persist: true
+      - data/downloads/external/capacity_by_offshore_month.parquet:
+          persist: true
+      - data/downloads/external/capacity_by_nuts2_month.parquet:
+          persist: true
+      - data/downloads/external/solar_capacity_by_nuts2_month.parquet:
+          persist: true
