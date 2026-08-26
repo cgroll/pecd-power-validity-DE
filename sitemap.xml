@@ -5,6 +5,24 @@
     <loc>http://localhost:3000</loc>
   </url>
   <url>
-    <loc>http://localhost:3000/notebooks/analyse-example</loc>
+    <loc>http://localhost:3000/notebooks/eda-data-availability</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/notebooks/eda-region-maps</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/notebooks/eda-redispatch-comparison</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/notebooks/eda-capacity-over-time</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/notebooks/analyse-potential-vs-observed</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/notebooks/analyse-curtailment-gap</loc>
+  </url>
+  <url>
+    <loc>http://localhost:3000/notebooks/analyse-remaining-gap</loc>
   </url>
 </urlset>
