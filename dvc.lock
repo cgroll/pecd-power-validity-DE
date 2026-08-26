@@ -240,3 +240,207 @@ stages:
       hash: md5
       md5: 0284b97259860845add1711ae124e113
       size: 2296648
+  download_pecd_masks:
+    cmd: uv run python pipeline/08_download_pecd_masks.py
+    deps:
+    - path: pipeline/08_download_pecd_masks.py
+      hash: md5
+      md5: 3c6973727e3fd273ed875fa365734d50
+      size: 1997
+    outs:
+    - path: data/downloads/pecd/peof_region_mask.nc
+      hash: md5
+      md5: 388b1ec71e500c49fba331e02678be8c
+      size: 34665619
+    - path: data/downloads/pecd/peon_region_mask.nc
+      hash: md5
+      md5: 3564693594af076c9fc01fe336b829d3
+      size: 85514663
+  download_region_geometries:
+    cmd: uv run python pipeline/09_download_region_geometries.py
+    deps:
+    - path: pipeline/09_download_region_geometries.py
+      hash: md5
+      md5: 5e0678176f6dc1e3ff8f8f266fc213f2
+      size: 1983
+    outs:
+    - path: data/downloads/country_borders.geojson
+      hash: md5
+      md5: dd213118020e9d2604bf9f29b540bfa5
+      size: 1758506
+    - path: data/downloads/nuts_regions.geojson
+      hash: md5
+      md5: deef50e6af7cf70882303055901eae9c
+      size: 7149154
+  eda_data_availability:
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/10_eda_data_availability.ipynb 
+      pipeline/10_eda_data_availability.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
+      book/notebooks/10_eda_data_availability.ipynb
+    deps:
+    - path: data/downloads/external/capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: dd1d6f1b803629ed59f3b944ccd7e589
+      size: 330102
+    - path: data/downloads/external/capacity_by_offshore_month.parquet
+      hash: md5
+      md5: b6aea9a7c36065dc1624603074adf573
+      size: 5615
+    - path: data/downloads/external/capacity_by_peof_month.parquet
+      hash: md5
+      md5: 80e7b4e9fae9fdbb32bea88160373ad2
+      size: 7259
+    - path: data/downloads/external/capacity_by_peon_month.parquet
+      hash: md5
+      md5: 007d9f28994339deb239fc0e2d35a333
+      size: 21238
+    - path: data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: 7c150064c796ba705c1d9ec00abae5f1
+      size: 154691
+    - path: data/downloads/netztransparenz/redispatch_measures.csv
+      hash: md5
+      md5: b8cc993c9458c37669a7f959e149d5c3
+      size: 16343084
+    - path: data/downloads/smard/capacity_solar.parquet
+      hash: md5
+      md5: 994a1c134374c48c8428d5f367df9b53
+      size: 862337
+    - path: data/downloads/smard/capacity_wind_offshore.parquet
+      hash: md5
+      md5: 9836787ca872bba02993fc8f06c91270
+      size: 862365
+    - path: data/downloads/smard/capacity_wind_onshore.parquet
+      hash: md5
+      md5: 00cdf050a4ee8790e3ff9d00505a4e0b
+      size: 862373
+    - path: data/downloads/smard/load.parquet
+      hash: md5
+      md5: eb9d2aef60a10353e8bc54d02b331892
+      size: 1001971
+    - path: data/downloads/smard/price_de_lu.parquet
+      hash: md5
+      md5: ca35519f46a60325921e97265fa3ca76
+      size: 796860
+    - path: data/downloads/smard/pv.parquet
+      hash: md5
+      md5: 25eba4284b9d1874cae848550cffe2f0
+      size: 984819
+    - path: data/downloads/smard/redispatch_by_source.parquet
+      hash: md5
+      md5: 1f60269901d9dc4317f145582c6caf00
+      size: 8974
+    - path: data/downloads/smard/wind_offshore.parquet
+      hash: md5
+      md5: eb59824312a78181e55ed65e996415d1
+      size: 860757
+    - path: data/downloads/smard/wind_onshore.parquet
+      hash: md5
+      md5: 893706bbd246aa46b820979a06236287
+      size: 1136454
+    - path: data/processed/pecd_solar_capacity_factors.parquet
+      hash: md5
+      md5: f1ac7e3e0f6162d5e04aac0f3a84e1f9
+      size: 51558551
+    - path: data/processed/pecd_wind_offshore_capacity_factors.parquet
+      hash: md5
+      md5: fc0302a6df4558f45f41a11788b71060
+      size: 2929080
+    - path: data/processed/pecd_wind_onshore_capacity_factors.parquet
+      hash: md5
+      md5: 0284b97259860845add1711ae124e113
+      size: 2296648
+    - path: pipeline/10_eda_data_availability.py
+      hash: md5
+      md5: 649ecd7b21e5ea182582381374204ba8
+      size: 6244
+    - path: pkg/redispatch_measures.py
+      hash: md5
+      md5: f7561afeba21582bf154355fa2944681
+      size: 7275
+    outs:
+    - path: book/notebooks/10_eda_data_availability.ipynb
+      hash: md5
+      md5: 4f65d446a9c33e6b72945b234ec16ea7
+      size: 11630
+    - path: output/images/10_data_availability_heatmap.png
+      hash: md5
+      md5: 0f508e3c8456c8f20cfabd7d78a17f65
+      size: 127382
+  eda_region_maps:
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/11_eda_region_maps.ipynb 
+      pipeline/11_eda_region_maps.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
+      book/notebooks/11_eda_region_maps.ipynb
+    deps:
+    - path: data/downloads/country_borders.geojson
+      hash: md5
+      md5: dd213118020e9d2604bf9f29b540bfa5
+      size: 1758506
+    - path: data/downloads/nuts_regions.geojson
+      hash: md5
+      md5: deef50e6af7cf70882303055901eae9c
+      size: 7149154
+    - path: data/downloads/pecd/peof_region_mask.nc
+      hash: md5
+      md5: 388b1ec71e500c49fba331e02678be8c
+      size: 34665619
+    - path: data/downloads/pecd/peon_region_mask.nc
+      hash: md5
+      md5: 3564693594af076c9fc01fe336b829d3
+      size: 85514663
+    - path: pipeline/11_eda_region_maps.py
+      hash: md5
+      md5: 1c76512449090faac4606e5f5047d604
+      size: 8109
+    outs:
+    - path: book/notebooks/11_eda_region_maps.ipynb
+      hash: md5
+      md5: 3290bc4e82c5794f68406ab258bcdd2e
+      size: 13590
+    - path: output/images/11_nuts2_regions.png
+      hash: md5
+      md5: f13173cedabf5c60a6a2155df2b149a4
+      size: 288519
+    - path: output/images/11_peof_zone_grid.png
+      hash: md5
+      md5: e02ca11f22e4234e8dc0ff52d466936a
+      size: 153086
+    - path: output/images/11_peon_zone_grid.png
+      hash: md5
+      md5: bef767b897c8787d4affc4838dd21ea0
+      size: 405600
+  eda_redispatch_comparison:
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/12_eda_redispatch_comparison.ipynb 
+      pipeline/12_eda_redispatch_comparison.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
+      book/notebooks/12_eda_redispatch_comparison.ipynb
+    deps:
+    - path: data/downloads/netztransparenz/redispatch_measures.csv
+      hash: md5
+      md5: b8cc993c9458c37669a7f959e149d5c3
+      size: 16343084
+    - path: data/downloads/smard/redispatch_by_source.parquet
+      hash: md5
+      md5: 1f60269901d9dc4317f145582c6caf00
+      size: 8974
+    - path: pipeline/12_eda_redispatch_comparison.py
+      hash: md5
+      md5: 3ed23caad84d64eaf14f788723a0b145
+      size: 8095
+    - path: pkg/redispatch_measures.py
+      hash: md5
+      md5: f7561afeba21582bf154355fa2944681
+      size: 7275
+    outs:
+    - path: book/notebooks/12_eda_redispatch_comparison.ipynb
+      hash: md5
+      md5: 385be87be4df3277fde6be295fcf9f5e
+      size: 12535
+    - path: output/images/12_redispatch_sources_side_by_side.png
+      hash: md5
+      md5: 4dd5ad9b012c2495d7b37b827aa3bf64
+      size: 266135

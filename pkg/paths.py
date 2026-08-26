@@ -223,6 +223,40 @@ class ProjPaths:
         """
         return self.processed_data_path / "pecd_wind_offshore_capacity_factors.parquet"
 
+    @property
+    def peon_mask_file(self) -> Path:
+        """PECD v4.2 PEON (onshore wind zone) rasterized region mask, all of
+        Europe: fractional 0.25-degree grid-cell coverage per zone. See
+        `pipeline/08_download_pecd_masks.py`.
+        """
+        return self.pecd_downloads_path / "peon_region_mask.nc"
+
+    @property
+    def peof_mask_file(self) -> Path:
+        """PECD v4.2 PEOF (offshore wind zone) rasterized region mask, same
+        structure as `peon_mask_file`.
+        """
+        return self.pecd_downloads_path / "peof_region_mask.nc"
+
+    # ------------------------------------------------------------------ #
+    # Region geometries (Eurostat/GISCO)                                   #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def nuts_regions_file(self) -> Path:
+        """German NUTS region geometries (levels 0-3), GeoJSON. See
+        `pipeline/09_download_region_geometries.py`.
+        """
+        return self.downloads_path / "nuts_regions.geojson"
+
+    @property
+    def country_borders_file(self) -> Path:
+        """Country-level (LEVL_CODE 0) outlines for Germany and its
+        North/Baltic Sea neighbors, for map context around offshore wind
+        zones. See `pipeline/09_download_region_geometries.py`.
+        """
+        return self.downloads_path / "country_borders.geojson"
+
     # ------------------------------------------------------------------ #
     # SMARD (Bundesnetzagentur)                                            #
     # ------------------------------------------------------------------ #

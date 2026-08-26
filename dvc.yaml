@@ -97,3 +97,101 @@ stages:
           persist: true
       - data/downloads/external/solar_capacity_by_nuts2_month.parquet:
           persist: true
+
+  download_pecd_masks:
+    cmd: uv run python pipeline/08_download_pecd_masks.py
+    deps:
+      - pipeline/08_download_pecd_masks.py
+    outs:
+      - data/downloads/pecd/peon_region_mask.nc:
+          persist: true
+      - data/downloads/pecd/peof_region_mask.nc:
+          persist: true
+
+  download_region_geometries:
+    cmd: uv run python pipeline/09_download_region_geometries.py
+    deps:
+      - pipeline/09_download_region_geometries.py
+    outs:
+      - data/downloads/nuts_regions.geojson:
+          persist: true
+      - data/downloads/country_borders.geojson:
+          persist: true
+
+  eda_data_availability:
+    cmd: >-
+      MPLBACKEND=Agg uv run jupytext --to notebook --execute
+      --set-kernel python3
+      --output book/notebooks/10_eda_data_availability.ipynb
+      pipeline/10_eda_data_availability.py &&
+      uv run python pipeline/_strip_jupytext_metadata.py
+      book/notebooks/10_eda_data_availability.ipynb
+    deps:
+      - pipeline/10_eda_data_availability.py
+      - pkg/redispatch_measures.py
+      - data/processed/pecd_solar_capacity_factors.parquet
+      - data/processed/pecd_wind_onshore_capacity_factors.parquet
+      - data/processed/pecd_wind_offshore_capacity_factors.parquet
+      - data/downloads/smard/pv.parquet
+      - data/downloads/smard/wind_onshore.parquet
+      - data/downloads/smard/wind_offshore.parquet
+      - data/downloads/smard/load.parquet
+      - data/downloads/smard/price_de_lu.parquet
+      - data/downloads/smard/capacity_solar.parquet
+      - data/downloads/smard/capacity_wind_onshore.parquet
+      - data/downloads/smard/capacity_wind_offshore.parquet
+      - data/downloads/smard/redispatch_by_source.parquet
+      - data/downloads/netztransparenz/redispatch_measures.csv
+      - data/downloads/external/capacity_by_peon_month.parquet
+      - data/downloads/external/capacity_by_peof_month.parquet
+      - data/downloads/external/capacity_by_offshore_month.parquet
+      - data/downloads/external/capacity_by_nuts2_month.parquet
+      - data/downloads/external/solar_capacity_by_nuts2_month.parquet
+    outs:
+      - book/notebooks/10_eda_data_availability.ipynb:
+          cache: false
+      - output/images/10_data_availability_heatmap.png:
+          cache: false
+
+  eda_region_maps:
+    cmd: >-
+      MPLBACKEND=Agg uv run jupytext --to notebook --execute
+      --set-kernel python3
+      --output book/notebooks/11_eda_region_maps.ipynb
+      pipeline/11_eda_region_maps.py &&
+      uv run python pipeline/_strip_jupytext_metadata.py
+      book/notebooks/11_eda_region_maps.ipynb
+    deps:
+      - pipeline/11_eda_region_maps.py
+      - data/downloads/nuts_regions.geojson
+      - data/downloads/country_borders.geojson
+      - data/downloads/pecd/peon_region_mask.nc
+      - data/downloads/pecd/peof_region_mask.nc
+    outs:
+      - book/notebooks/11_eda_region_maps.ipynb:
+          cache: false
+      - output/images/11_nuts2_regions.png:
+          cache: false
+      - output/images/11_peon_zone_grid.png:
+          cache: false
+      - output/images/11_peof_zone_grid.png:
+          cache: false
+
+  eda_redispatch_comparison:
+    cmd: >-
+      MPLBACKEND=Agg uv run jupytext --to notebook --execute
+      --set-kernel python3
+      --output book/notebooks/12_eda_redispatch_comparison.ipynb
+      pipeline/12_eda_redispatch_comparison.py &&
+      uv run python pipeline/_strip_jupytext_metadata.py
+      book/notebooks/12_eda_redispatch_comparison.ipynb
+    deps:
+      - pipeline/12_eda_redispatch_comparison.py
+      - pkg/redispatch_measures.py
+      - data/downloads/smard/redispatch_by_source.parquet
+      - data/downloads/netztransparenz/redispatch_measures.csv
+    outs:
+      - book/notebooks/12_eda_redispatch_comparison.ipynb:
+          cache: false
+      - output/images/12_redispatch_sources_side_by_side.png:
+          cache: false

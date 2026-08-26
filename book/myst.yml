@@ -12,6 +12,11 @@ project:
   github: your-username/your-repo-name
   toc:
     - file: markdown/index.md
+    - title: Exploring the data
+      children:
+        - file: notebooks/10_eda_data_availability.ipynb
+        - file: notebooks/11_eda_region_maps.ipynb
+        - file: notebooks/12_eda_redispatch_comparison.ipynb
 site:
   options:
     folders: true
