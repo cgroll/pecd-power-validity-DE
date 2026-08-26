@@ -1,42 +1,79 @@
-# Project Book Template
+# PECD Power Validity DE
 
-A template for research projects that publish a [MyST](https://mystmd.org/) Jupyter Book
-to GitHub Pages. The data pipeline is managed by [DVC](https://dvc.org/);
-dependencies are managed by [uv](https://docs.astral.sh/uv/).
+How much of Germany's actual wind and solar power output can be
+reconstructed from PECD's **official** capacity factors and the
+Marktstammdatenregister (MaStR) installed-capacity register — and where
+does that reconstruction structurally have to fall short of what SMARD
+reports as generated?
 
-## Starting a new project from this template
+This project does **not** replicate PECD's own capacity-factor methodology
+from weather data — that is
+[pecd-replication](https://github.com/cgroll/pecd-replication)'s job. It
+takes PECD's official product as given and asks a narrower question:
+capacity factor × installed capacity gives a **potential** output — how
+far is that from what SMARD reports was actually produced, and can the
+gap be explained by known intermediate mechanisms (maintenance/outage
+unavailability, price-driven curtailment at negative prices, and
+grid-congestion curtailment/redispatch) rather than left as unexplained
+noise?
 
-### Pick your names up front
+## The core problem: potential ≠ observed generation
 
-You need two names:
+PECD capacity factor × MaStR installed capacity is **not** directly
+comparable to SMARD's reported generation. Several real, non-trivial
+steps sit between "theoretical potential" and "SMARD's after-redispatch
+generation":
 
-| What | Example | Rule |
-|------|---------|------|
-| **Repository / folder name** | `financial-market-returns` | Chosen on GitHub when you create the repo — becomes the local folder name after cloning |
-| **Python package abbreviation** | `fmr` | Short acronym you pick yourself; used in every `import` statement |
-
-The abbreviation is the equivalent of `woe` in `world-of-energy`. It must be a
-valid Python identifier (letters, digits, underscores) — shorter is better.
-
-### 1. Create the repository on GitHub
-
-Click **Use this template → Create a new repository** at the top of this page.
-Name it (e.g. `financial-market-returns`) and click **Create repository**.
-
-### 2. Clone and initialize
-
-```bash
-git clone https://github.com/your-username/financial-market-returns.git
-cd financial-market-returns
-python init_project.py
+```
+PECD capacity factor × MaStR installed capacity     (potential)
+  − unavailable capacity (maintenance / outages)
+  − voluntary curtailment (negative day-ahead prices)
+  − congestion curtailment (redispatch instructions)
+  = generation actually fed into the grid              (pre-redispatch)
+  ± redispatch                                          (SMARD reports *after* redispatch)
+  = SMARD reported net generation
 ```
 
-The script reads the project name from the git remote automatically and asks
-only for the package abbreviation. It renames `pkg/`, updates all references
-in `pyproject.toml` and the pipeline scripts, commits the result, and removes
-itself.
+Comparing PECD potential directly against SMARD without accounting for
+this chain over- or understates how good PECD's product actually is at
+describing the real market. This project's job is to make the chain
+explicit and quantify each step, not to close the gap by any means
+necessary — some of it (behind-the-meter self-consumption, unattributed
+outages) may simply not be closable with public data.
 
-### 3. Set up the environment
+## Building a Germany-wide estimate from regional capacity factors
+
+PECD v4.2 publishes capacity factors at different spatial resolutions per
+technology — solar PV at NUTS2, wind onshore at PEON zones (7 for
+Germany), wind offshore at PEOF zones (6 for Germany, none of them NUTS
+codes). None of these line up with MaStR's own region codes without a
+crosswalk. Getting one Germany-wide potential number means:
+
+1. A capacity panel keyed by the *same* regions PECD publishes for that
+   technology (NUTS2 for solar, PEON for onshore wind, PEOF for offshore
+   wind), built from MaStR. See
+   [mastr-power-capacities-germany](https://github.com/cgroll/mastr-power-capacities-germany),
+   which already builds this crosswalk — via PECD's own rasterized region
+   masks, since neither zone scheme's polygons are published directly —
+   and maintains it as a monthly panel.
+2. Weighting each region's capacity factor by its month's installed
+   capacity and summing across regions to one national hourly potential
+   series per technology.
+
+## Data sources
+
+| Source | What we get | Reference implementation |
+|---|---|---|
+| **PECD v4.2** (Copernicus CDS) | Official hourly capacity factors: solar PV (NUTS2, 4 technology sub-classes), wind onshore (PEON), wind offshore (PEOF) | [pecd-replication](https://github.com/cgroll/pecd-replication) `pipeline/16_download_pecd_capacity_factors.py` |
+| **MaStR** | Installed capacity by NUTS2 / PEON / PEOF / offshore pseudo-region, monthly | [mastr-power-capacities-germany](https://github.com/cgroll/mastr-power-capacities-germany) — consumed directly, not re-derived |
+| **SMARD** (Bundesnetzagentur) | Hourly DE-LU net generation (solar, wind onshore, wind offshore), load, day-ahead price; monthly installed capacities | [pecd-replication](https://github.com/cgroll/pecd-replication) `pipeline/13_download_smard.py` |
+| **Redispatch / congestion** | SMARD's monthly redispatch-by-source (since 2022-07); netztransparenz.de's per-measure redispatch export (since 2021-01) | [pecd-replication](https://github.com/cgroll/pecd-replication) `pipeline/43`, `pipeline/47` |
+
+See [PROJECT.md](PROJECT.md) for the planned pipeline stages and open
+questions on how much of this to re-download versus consume directly from
+the sibling projects above.
+
+## Running it
 
 ```bash
 # Install uv if you haven't already — https://docs.astral.sh/uv/
@@ -45,47 +82,31 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync
 ```
 
-### 4. Verify the example pipeline
-
 ```bash
 make dry-run   # preview what would run
-make run       # execute the example pipeline
+make run       # execute the pipeline (dvc repro)
 make serve     # open http://localhost:3000 — live book preview
 ```
-
-Once everything works, remove the example files and start your own pipeline:
-
-```bash
-rm pipeline/01_download_example.py pipeline/02_analyse_example.py
-# Remove the example stage from dvc.yaml and the notebook entry from book/myst.yml
-```
-
-### 5. Enable GitHub Pages
-
-In your repository: **Settings → Pages → Source → GitHub Actions**.
-
-Every push to `main` will build and deploy the book automatically.
-Pull requests run only the build check.
 
 ## Project layout
 
 ```
 project-root/
-├── <abbrev>/            # Python package — renamed by init_project.py
-│   └── paths.py         # Centralized path config
-├── pipeline/            # Pipeline scripts
-│   ├── 01_download_*    # Data acquisition
-│   └── 02_analyse_*     # Analysis → notebook
-├── book/                # MyST book source
-│   ├── notebooks/       # Executed notebooks (DVC output)
-│   ├── markdown/        # Static content
-│   └── myst.yml         # TOC and site settings
-├── data/                # Git-ignored data (cached by DVC)
-├── output/images/       # Figures (tracked in git)
-├── dvc.yaml             # Pipeline DAG
-├── dvc.lock             # Pipeline state (checksums) — tracked in git
-├── AGENTS.md            # Detailed conventions for contributors/AI
-└── PROJECT.md           # Current state, roadmap, lessons learned
+├── pkg/                  # Python package — shared utilities (pending rename, see PROJECT.md)
+│   └── paths.py          # Centralized path config
+├── pipeline/             # Pipeline scripts
+│   ├── 01_download_*     # Data acquisition
+│   └── 02_analyse_*      # Analysis → notebook
+├── book/                 # MyST book source
+│   ├── notebooks/        # Executed notebooks (DVC output)
+│   ├── markdown/         # Static content
+│   └── myst.yml          # TOC and site settings
+├── data/                 # Git-ignored data (cached by DVC)
+├── output/images/        # Figures (tracked in git)
+├── dvc.yaml              # Pipeline DAG
+├── dvc.lock              # Pipeline state (checksums) — tracked in git
+├── AGENTS.md              # Detailed conventions for contributors/AI
+└── PROJECT.md            # Current state, roadmap, lessons learned
 ```
 
 See [AGENTS.md](AGENTS.md) for full details on adding pipeline stages,

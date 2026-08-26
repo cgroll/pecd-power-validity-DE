@@ -1,7 +1,7 @@
 [project]
-name = "my-project"
+name = "pecd-power-validity-de"
 version = "0.1.0"
-description = "Research project"
+description = "How well PECD's official capacity factors x MaStR capacity reconstruct Germany's actual SMARD generation, and why not perfectly"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
