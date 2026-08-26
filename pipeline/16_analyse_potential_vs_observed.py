@@ -100,12 +100,24 @@ def error_stats(frame: pd.DataFrame, potential_col: str, observed_col: str, capa
     sub = frame[[potential_col, observed_col, capacity_col]].dropna()
     potential_cf = sub[potential_col] / sub[capacity_col]
     observed_cf = sub[observed_col] / sub[capacity_col]
-    err = potential_cf - observed_cf
+    err_cf = potential_cf - observed_cf
+    err_mw = sub[potential_col] - sub[observed_col]
+    mean_observed_mw = sub[observed_col].mean()
     return {
         "n_hours": len(sub),
-        "mae_cf": err.abs().mean(),
-        "bias_cf": err.mean(),
-        "corr": potential_cf.corr(observed_cf),
+        # capacity-factor-normalized (0-1 scale, size-independent, comparable to pecd-replication)
+        "mae_cf": err_cf.abs().mean(),
+        "bias_cf": err_cf.mean(),
+        "corr_cf": potential_cf.corr(observed_cf),
+        # absolute scale (GW) -- the actual scale a forecast would be judged on
+        "mae_gw": err_mw.abs().mean() / 1000,
+        "bias_gw": err_mw.mean() / 1000,
+        "corr_mw": sub[potential_col].corr(sub[observed_col]),
+        "mean_observed_gw": mean_observed_mw / 1000,
+        # MAE relative to the technology's own average output -- comparable
+        # across technologies of very different absolute size, without CF's
+        # capacity normalization changing what's being measured
+        "nmae_pct": err_mw.abs().mean() / mean_observed_mw * 100,
     }
 
 
@@ -113,25 +125,51 @@ for label, window in [("2016-2025 (full available)", FULL_WINDOW), ("2019-2025 (
     print(f"\n{label}:")
     for tech, (p_col, o_col) in PAIRS.items():
         stats = error_stats(window, p_col, o_col, tech)
-        print(f"  {tech:15s} n={stats['n_hours']:>7,}  MAE={stats['mae_cf']:.4f}  bias={stats['bias_cf']:+.4f}  corr={stats['corr']:.4f}")
+        print(
+            f"  {tech:15s} n={stats['n_hours']:>7,}  "
+            f"MAE={stats['mae_cf']:.4f} cf / {stats['mae_gw']:.2f} GW  "
+            f"bias={stats['bias_cf']:+.4f} cf / {stats['bias_gw']:+.2f} GW  "
+            f"nMAE={stats['nmae_pct']:.1f}%  corr={stats['corr_cf']:.4f}"
+        )
 
 # %% [markdown]
 # ## Headline comparison table (2019-2025)
+#
+# Two views of the same comparison: capacity-factor-normalized (size-
+# independent, directly comparable to `pecd-replication`'s own published
+# numbers) and absolute GW (the actual scale a forecast of this quantity
+# would be judged on). `nMAE` is MAE divided by that technology's own mean
+# observed output -- a relative-error view that, unlike the capacity-factor
+# columns, isn't affected by how much *unused* capacity a technology
+# happens to carry.
 
 # %%
 summary = pd.DataFrame({tech: error_stats(PRIMARY_WINDOW, *PAIRS[tech], tech) for tech in PAIRS}).T
-summary[["mae_cf", "bias_cf", "corr"]].round(4)
+
+print("Capacity-factor-normalized:")
+display(summary[["mae_cf", "bias_cf", "corr_cf"]].round(4))
+
+print("\nAbsolute scale (GW):")
+display(summary[["mean_observed_gw", "mae_gw", "bias_gw", "nmae_pct", "corr_mw"]].round(2))
 
 # %% [markdown]
-# These numbers land within rounding distance of `pecd-replication`'s own
-# published "PECD official x MaStR" row (solar MAE 0.016/corr 0.981, wind
-# onshore MAE 0.029/corr 0.985, wind offshore MAE 0.094/corr 0.902) --
-# despite this project's potential panel being built by an entirely
-# separate pipeline that only consumes the two sibling projects'
-# *processed* capacity panels, not their code. That agreement is a real
-# external validation that the capacity-weighting logic here
-# (`pkg/potential.py`) is doing the right thing, not just an internally
-# consistent one.
+# The capacity-factor row lands within rounding distance of
+# `pecd-replication`'s own published "PECD official x MaStR" row (solar
+# MAE 0.016/corr 0.981, wind onshore MAE 0.029/corr 0.985, wind offshore
+# MAE 0.094/corr 0.902) -- despite this project's potential panel being
+# built by an entirely separate pipeline that only consumes the two
+# sibling projects' *processed* capacity panels, not their code. That
+# agreement is a real external validation that the capacity-weighting
+# logic here (`pkg/potential.py`) is doing the right thing, not just an
+# internally consistent one.
+#
+# The absolute-scale row is the one that actually matters for judging a
+# potential forecast on the scale it would be used at: wind onshore's
+# error is largest in GW terms (it has the most capacity), but solar's
+# nMAE is highest relative to its own mean output -- consistent with
+# solar's gap being dominated by a mechanism (self-consumption) that
+# scales with capacity rather than curtailment's more output-level-
+# dependent pattern.
 
 # %% [markdown]
 # ## What the gap looks like over time
@@ -232,6 +270,44 @@ plt.show()
 # ```
 
 # %% [markdown]
+# ## Scatter view: the same hours, absolute GW
+#
+# Capacity-factor terms are the right scale for judging *how good the
+# match is*, size-independent -- but GW is the scale this project's
+# problem statement is actually stated in, and the scale a forecast of
+# this quantity would eventually be judged on. Each technology gets its
+# own axis range here (peak solar/onshore output is roughly 5-7x
+# offshore's), unlike the shared 0-1 capacity-factor scale above.
+
+# %%
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+for ax, tech in zip(axes, PAIRS):
+    p_col, o_col = PAIRS[tech]
+    sub = PRIMARY_WINDOW[[p_col, o_col]].dropna() / 1000  # MW -> GW
+    ax.scatter(sub[o_col], sub[p_col], s=1, alpha=0.15, color=TECH_COLORS[tech], rasterized=True)
+    lims = [0, max(sub[p_col].max(), sub[o_col].max())]
+    ax.plot(lims, lims, color="#3a3a3a", linewidth=1, linestyle=":")
+    ax.set_xlabel("Observed (GW)")
+    ax.set_ylabel("Potential (GW)")
+    ax.set_title(tech.replace("_", " ").title())
+fig.suptitle("Potential vs. observed, absolute GW, 2019-2025 (dotted line = y=x)")
+fig.tight_layout()
+fig.savefig(paths.images_path / "16_potential_vs_observed_scatter_gw.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ```{figure} ../../output/images/16_potential_vs_observed_scatter_gw.png
+# :name: fig-16-scatter-gw
+# The same hours as the capacity-factor scatter above, in the absolute GW
+# scale this project's actual problem statement is stated in. The same
+# above-the-line tilt is visible, but now scaled by each technology's own
+# installed capacity -- wind onshore's absolute spread is the widest in GW
+# terms simply because it has the most capacity, not because it's
+# modeled any worse (its capacity-factor-normalized error is in fact the
+# smallest of the three, per the headline table above).
+# ```
+
+# %% [markdown]
 # ## Takeaways
 #
 # - This project's independently-built potential panel reproduces
@@ -249,3 +325,10 @@ plt.show()
 #   consistent with curtailment (which binds hardest exactly when
 #   potential output is highest) rather than a simple constant
 #   unavailability rate.
+# - Capacity-factor terms and absolute GW terms rank the three
+#   technologies differently: wind onshore has the smallest
+#   capacity-factor-normalized error but the largest absolute (GW) one,
+#   simply because it carries the most capacity -- a reminder that "how
+#   good is this model" and "how big is this error going to be in
+#   practice" are two different questions, and this project reports both
+#   rather than picking one.

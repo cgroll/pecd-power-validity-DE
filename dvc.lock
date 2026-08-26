@@ -577,8 +577,8 @@ stages:
       size: 2353887
     - path: pipeline/16_analyse_potential_vs_observed.py
       hash: md5
-      md5: 97d5646f1a413333b5704072ab645609
-      size: 11323
+      md5: c1ad43c10f5b7bd5934950616702bb85
+      size: 15626
     - path: pkg/potential.py
       hash: md5
       md5: 4903a9611474cc88c7eb97eef4a7b4b8
@@ -586,8 +586,8 @@ stages:
     outs:
     - path: book/notebooks/16_analyse_potential_vs_observed.ipynb
       hash: md5
-      md5: 673f3a2e126085a9e0aefd4be9a4cb26
-      size: 20379
+      md5: 9a9b50d27338dbb20347e02fe6dd7ca8
+      size: 28661
     - path: output/images/16_potential_vs_observed_monthly.png
       hash: md5
       md5: 73ea3dfc3f7fb6f6163e2d789d46c25d
@@ -596,6 +596,10 @@ stages:
       hash: md5
       md5: 2d9498b9293bb42c38cb57b920f0a2c5
       size: 661969
+    - path: output/images/16_potential_vs_observed_scatter_gw.png
+      hash: md5
+      md5: dc3df0fc3328ec3d8b3bf30636ca983a
+      size: 538721
     - path: output/images/16_potential_vs_observed_zoom.png
       hash: md5
       md5: 01ab6bca9a005d5cf603e4108090ae33

@@ -279,6 +279,8 @@ stages:
           cache: false
       - output/images/16_potential_vs_observed_scatter.png:
           cache: false
+      - output/images/16_potential_vs_observed_scatter_gw.png:
+          cache: false
 
   analyse_curtailment_gap:
     cmd: >-

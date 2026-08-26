@@ -378,3 +378,21 @@ reusing instead).
 - Closes out the originally planned analysis chain (potential → target →
   potential-vs-observed → curtailment gap → remaining gap). What's left
   is listed as possible follow-ups, not a queued next step.
+
+### 2026-08-26 — Added absolute-scale metrics/scatter alongside capacity-factor ones
+
+- User feedback on `16_analyse_potential_vs_observed.py`: capacity-factor
+  terms are the right scale for judging *how good the match is* (and for
+  comparing against `pecd-replication`'s published numbers), but GW is
+  the actual scale this project's problem statement is stated in and the
+  scale any eventual forecast gets judged on — both belong in the
+  headline notebook, not just one. Added: a second scatter plot in
+  absolute GW (own axis range per technology, since peak solar/onshore
+  output is ~5-7x offshore's); `mae_gw`/`bias_gw` alongside the existing
+  `mae_cf`/`bias_cf`; and `nmae_pct` (MAE relative to each technology's
+  own mean observed output) as a relative-error view that, unlike
+  capacity-factor terms, isn't affected by how much *unused* capacity a
+  technology happens to carry. Result worth remembering: the two scales
+  rank the three technologies differently — wind onshore has the
+  smallest capacity-factor error but the largest absolute (GW) one,
+  simply because it carries the most capacity.
