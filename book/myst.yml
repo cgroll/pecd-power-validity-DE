@@ -21,6 +21,7 @@ project:
     - title: Potential vs. observed
       children:
         - file: notebooks/16_analyse_potential_vs_observed.ipynb
+        - file: notebooks/17_analyse_curtailment_gap.ipynb
 site:
   options:
     folders: true

@@ -5,9 +5,9 @@ See [AGENTS.md](AGENTS.md) for structure/tooling conventions.
 
 ## Current State
 
-Data-acquisition pipeline, exploratory EDA, and the headline
-potential-vs-observed comparison all built and verified end-to-end
-(2026-08-26). See
+Data-acquisition pipeline, exploratory EDA, the headline
+potential-vs-observed comparison, and the curtailment-gap decomposition
+all built and verified end-to-end (2026-08-26). See
 [README.md](README.md) for the full problem statement. In short: this
 project checks how well PECD's **official** capacity-factor product,
 weighted by MaStR installed capacity, reconstructs Germany's actual
@@ -157,11 +157,19 @@ reusing instead).
     negative prices, self-consumption) is the right next step, not a
     doomed one.
 
+15. `17_analyse_curtailment_gap.py` — how much of the gap each mechanism
+    explains, descriptively (not a calibrated model like
+    `pecd-replication`'s NNLS curve-fitting): redispatch-reported
+    congestion curtailment (2022-07 onward, SMARD monthly, by energy
+    source) explains **70.7%** of wind offshore's gap, **33.3%** of wind
+    onshore's, but only **11.2%** of solar's — consistent with solar's
+    gap being mostly a different mechanism (self-consumption) than
+    congestion curtailment. Independently, the gap is **~5x larger during
+    negative day-ahead-price hours** than otherwise, for all three
+    technologies — a real, if unsized, voluntary-curtailment signature.
+
 **Still to do**
 
-15. `17_analyse_curtailment_gap.py` — how much of the gap each mechanism
-    explains: redispatch-sourced congestion curtailment, and negative
-    day-ahead price hours (voluntary curtailment).
 16. `18_analyse_remaining_gap.py` — what's left after both mechanisms
     (behind-the-meter self-consumption for solar, unmodeled
     maintenance/outages, PECD-product-own bias) and what would be needed
@@ -169,12 +177,8 @@ reusing instead).
 
 **Open questions**
 
-- Whether the congestion-curtailment chapter should be scoped to
-  2022-07-onward only (SMARD's redispatch-by-source series' actual
-  start), with the negative-price mechanism covering the full period
-  instead, or whether the netztransparenz per-measure series (2021-01
-  onward) can extend congestion coverage a bit further back.
-- Package abbreviation for `init_project.py` — not yet decided/run.
+- Package abbreviation for `init_project.py` — not yet decided/run
+  (functionally optional; `pkg` works fine as-is, see Lessons Learned).
 
 ## Lessons Learned
 
@@ -314,3 +318,28 @@ reusing instead).
   PECD/SMARD/redispatch downloads — those ended up built standalone in
   this repo; only MaStR's capacity panels (and solar's technology
   crosswalk) are actually consumed from sibling projects.
+
+### 2026-08-26 — Curtailment-gap analysis; another month-convention bug
+
+- Built `17_analyse_curtailment_gap.py`. First pass came back with
+  `NaN` for every "share of gap explained by redispatch" number: SMARD's
+  `redispatch_by_source.parquet` stores `month` as the **first** of the
+  month (`2022-07-01`), while every other monthly panel in this project
+  (capacity panels, the resampled gap series) uses month-**end**
+  (`2022-07-31`) — so a plain Timestamp join silently matched nothing.
+  Fixed by aligning both sides via `.to_period("M")` instead of raw
+  Timestamp equality, rather than assuming a single date convention
+  holds across sources. Worth remembering before joining *any* new
+  monthly series in this project against the existing ones.
+- Also caught and cleaned up a genuine false start while writing the
+  residual-gap section: an over-engineered per-hour negative-price-
+  weighted residual calculation that produced an unused intermediate
+  result, replaced with the much simpler month-level
+  `gap_gwh - redispatch_gwh` that's actually what "does redispatch alone
+  close the gap" needs.
+- Results: redispatch-reported curtailment explains 70.7% of wind
+  offshore's gap, 33.3% of onshore's, only 11.2% of solar's (consistent
+  with solar's gap being mostly self-consumption, a different mechanism
+  entirely) — and the gap runs ~5x larger during negative-price hours
+  for all three technologies, a real if unsized voluntary-curtailment
+  signature.
