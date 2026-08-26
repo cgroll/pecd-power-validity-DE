@@ -27,10 +27,11 @@ outputs. Real data now in `data/downloads/`/`data/processed/`:
 - PECD v4.2 official capacity factors, hourly, 2015-2025: solar (NUTS2 x
   4 technologies), wind onshore (7 PEON zones), wind offshore (6 PEOF
   zones).
-- SMARD hourly generation/load/price, DE-LU: PV and wind onshore from
-  2016-12-30; wind offshore, load, and price only from 2018-09-30 (the
-  DE-LU market area didn't exist as a separate SMARD region before then —
-  confirms the gap flagged in delu-headline-forecast's data-sources doc).
+- SMARD hourly generation/load/price, DE-LU: all five series usable only
+  from 2018-10-01 (the DE-LU market area's real creation date). PV/wind
+  onshore's raw files carry an index back to 2016-12-30, but values before
+  2018-10-01 are bogus placeholders, not real generation — nulled out in
+  `pipeline/15_build_target_panel.py` (see Lessons Learned).
 - SMARD monthly installed-capacity series (national cross-check).
 - SMARD monthly redispatch-by-source (1,196 rows, 2022-07 to 2026-04) and
   netztransparenz's per-measure redispatch export (16.3 MB CSV, 2021-01
@@ -285,3 +286,31 @@ reusing instead).
   implementation here is correct, built from a completely separate
   codebase that only consumes the two sibling projects' *processed*
   outputs.
+
+### 2026-08-26 — pre-commit had never actually run; fixed a real hook conflict
+
+- Ran `uvx pre-commit run --all-files` for the first time in this
+  project's history as part of the `wrap-up` skill — no git hook was ever
+  installed (`pre-commit install` was never called), so nothing in
+  `.pre-commit-config.yaml` had ever actually executed before. `black`
+  reformatted 23 files and `nbstripout` stripped every notebook's outputs;
+  both were reverted (`git checkout -- .`) rather than kept, per explicit
+  user decision.
+- `nbstripout` directly conflicts with this project's own convention
+  (`AGENTS.md`: notebooks are committed *with* outputs so the book builds
+  from git without re-running) — stripping them would silently drop every
+  printed table/stat not also saved as a separate PNG. Removed both
+  `black` and `nbstripout` from `.pre-commit-config.yaml`; kept
+  `check-toml`/`check-yaml`/`end-of-file-fixer`/`trailing-whitespace`/
+  `check-added-large-files`, none of which conflict with anything here.
+- Also found and cleaned up two loose ends from the very first pipeline
+  commit, surfaced by the resulting `dvc status` noise:
+  `book/notebooks/02_analyse_example.ipynb` (the template's example
+  notebook, never deleted when its pipeline script was removed) and two
+  orphaned `dvc.lock` entries (`download_example`, `process_example`) for
+  stages no longer in `dvc.yaml`.
+- Fixed `README.md`'s data-sources table, which still credited
+  `pecd-replication`'s scripts as the "reference implementation" for
+  PECD/SMARD/redispatch downloads — those ended up built standalone in
+  this repo; only MaStR's capacity panels (and solar's technology
+  crosswalk) are actually consumed from sibling projects.

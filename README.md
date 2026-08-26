@@ -62,16 +62,15 @@ crosswalk. Getting one Germany-wide potential number means:
 
 ## Data sources
 
-| Source | What we get | Reference implementation |
+| Source | What we get | Built |
 |---|---|---|
-| **PECD v4.2** (Copernicus CDS) | Official hourly capacity factors: solar PV (NUTS2, 4 technology sub-classes), wind onshore (PEON), wind offshore (PEOF) | [pecd-replication](https://github.com/cgroll/pecd-replication) `pipeline/16_download_pecd_capacity_factors.py` |
-| **MaStR** | Installed capacity by NUTS2 / PEON / PEOF / offshore pseudo-region, monthly | [mastr-power-capacities-germany](https://github.com/cgroll/mastr-power-capacities-germany) — consumed directly, not re-derived |
-| **SMARD** (Bundesnetzagentur) | Hourly DE-LU net generation (solar, wind onshore, wind offshore), load, day-ahead price; monthly installed capacities | [pecd-replication](https://github.com/cgroll/pecd-replication) `pipeline/13_download_smard.py` |
-| **Redispatch / congestion** | SMARD's monthly redispatch-by-source (since 2022-07); netztransparenz.de's per-measure redispatch export (since 2021-01) | [pecd-replication](https://github.com/cgroll/pecd-replication) `pipeline/43`, `pipeline/47` |
+| **PECD v4.2** (Copernicus CDS) | Official hourly capacity factors: solar PV (NUTS2, 4 technology sub-classes), wind onshore (PEON), wind offshore (PEOF) | Standalone in this repo (`pipeline/01`-`02`, `pkg/cds.py`) — pattern adapted from [pecd-replication](https://github.com/cgroll/pecd-replication) |
+| **MaStR** | Installed capacity by NUTS2 / PEON / PEOF / offshore pseudo-region, monthly | Consumed directly from [mastr-power-capacities-germany](https://github.com/cgroll/mastr-power-capacities-germany) and (for solar's PECD-technology split) [pecd-replication](https://github.com/cgroll/pecd-replication) — not re-derived (`pipeline/07`) |
+| **SMARD** (Bundesnetzagentur) | Hourly DE-LU net generation (solar, wind onshore, wind offshore), load, day-ahead price; monthly installed capacities | Standalone in this repo (`pipeline/03`-`04`, `pkg/smard.py`) |
+| **Redispatch / congestion** | SMARD's monthly redispatch-by-source (since 2022-07); netztransparenz.de's per-measure redispatch export (since 2021-01) | Standalone in this repo (`pipeline/05`-`06`, `pkg/smard_redispatch.py`, `pkg/redispatch_measures.py`) |
 
-See [PROJECT.md](PROJECT.md) for the planned pipeline stages and open
-questions on how much of this to re-download versus consume directly from
-the sibling projects above.
+See [PROJECT.md](PROJECT.md) for the full pipeline stage list and open
+questions.
 
 ## Running it
 
