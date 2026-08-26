@@ -5,7 +5,8 @@ See [AGENTS.md](AGENTS.md) for structure/tooling conventions.
 
 ## Current State
 
-Data-acquisition pipeline built and verified end-to-end (2026-08-26). See
+Data-acquisition pipeline plus a first round of exploratory notebooks
+built and verified end-to-end (2026-08-26). See
 [README.md](README.md) for the full problem statement. In short: this
 project checks how well PECD's **official** capacity-factor product,
 weighted by MaStR installed capacity, reconstructs Germany's actual
@@ -86,25 +87,52 @@ depend on a sibling repo's copy, per the "rebuild it here if it's not
 huge" rule of thumb (contrast MaStR's raw feed at ~12GB, genuinely worth
 reusing instead).
 
+**Exploratory EDA — done (2026-08-26)**
+
+7. `08_download_pecd_masks.py` / `09_download_region_geometries.py` — two
+   small standalone downloads (CDS zone masks, GISCO region geometries)
+   feeding the map notebook below; not needed for the actual potential
+   calculation, only to visualize what a "zone" or "NUTS2 region" is.
+8. `10_eda_data_availability.py` — monthly presence heatmap across all 18
+   downloaded series. Confirms the real binding constraint: the usable
+   backtest window is set by SMARD's DE-LU history (wind offshore/load/
+   price only from 2018-09), not by PECD's or MaStR's own 2015+ coverage.
+9. `11_eda_region_maps.py` — Germany's NUTS2 regions (solar's PECD
+   resolution) plus the PEON/PEOF wind zones as raw grid cells (adapted
+   from `mastr-power-capacities-germany`'s own zone EDA). Makes concrete
+   that PEON/PEOF is a wholly separate ENTSO-E partition, not a NUTS
+   grouping.
+10. `12_eda_redispatch_comparison.py` — SMARD's monthly
+    redispatch-by-source vs. netztransparenz's per-measure export.
+    Offshore wind matches almost exactly (100.0%) since netztransparenz
+    names offshore farms individually; onshore wind + PV only reaches
+    39.2% of SMARD's figure when counted via
+    `primary_energy_type=="Erneuerbar"` (vs. 1.7% if restricted to
+    measures individually name-attributable to a technology) — consistent
+    with `pecd-replication`'s own finding (38.7%) on the same comparison.
+    Deliberately stops short of `pecd-replication`'s own statistical
+    entity-attribution step (`pipeline/46`); flagged as reusable later if
+    the gap-explanation chapters need a finer split.
+
 **Processing / analysis — not yet started**
 
-7. `08_build_pecd_potential_panel.py` — PECD capacity factor × capacity,
-   per region/technology/month, weighted up to one Germany-wide hourly
-   **potential** series per technology (solar, wind onshore, wind
-   offshore). This is the "regional capacity factors → one national
-   estimate" step. Solar needs a (NUTS2 x PECD-technology) weighted sum
-   across all 4 sub-series; wind onshore/offshore are a straight
-   (PEON/PEOF-zone x month) weighted sum — zone codes already match
-   PECD's own column names on both sides.
-8. `09_build_target_panel.py` — SMARD generation + price, hourly, aligned
-   to the same index as the potential panel.
-9. `10_analyse_potential_vs_observed.py` — the headline comparison:
-   potential vs. SMARD reported generation, by technology, full period —
-   the gap this project exists to explain.
-10. `11_analyse_curtailment_gap.py` — how much of the gap each mechanism
+11. `13_build_pecd_potential_panel.py` — PECD capacity factor × capacity,
+    per region/technology/month, weighted up to one Germany-wide hourly
+    **potential** series per technology (solar, wind onshore, wind
+    offshore). This is the "regional capacity factors → one national
+    estimate" step. Solar needs a (NUTS2 x PECD-technology) weighted sum
+    across all 4 sub-series; wind onshore/offshore are a straight
+    (PEON/PEOF-zone x month) weighted sum — zone codes already match
+    PECD's own column names on both sides.
+12. `14_build_target_panel.py` — SMARD generation + price, hourly, aligned
+    to the same index as the potential panel.
+13. `15_analyse_potential_vs_observed.py` — the headline comparison:
+    potential vs. SMARD reported generation, by technology, full period —
+    the gap this project exists to explain.
+14. `16_analyse_curtailment_gap.py` — how much of the gap each mechanism
     explains: redispatch-sourced congestion curtailment, and negative
     day-ahead price hours (voluntary curtailment).
-11. `12_analyse_remaining_gap.py` — what's left after both mechanisms
+15. `17_analyse_remaining_gap.py` — what's left after both mechanisms
     (behind-the-meter self-consumption for solar, unmodeled
     maintenance/outages, PECD-product-own bias) and what would be needed
     to close it further.
@@ -173,3 +201,32 @@ reusing instead).
   just dry-run: `dvc repro` is a clean, reproducible pipeline as of this
   writing. Full PECD CF download took ~50 minutes wall-clock (CDS
   server-side queueing, not this project's bottleneck).
+
+### 2026-08-26 — `pkg/paths.py` deliberately not tracked as a DVC dep
+
+- User asked directly whether `pkg/paths.py` is listed as a `deps:` entry
+  anywhere in `dvc.yaml` (worried that a shared, ever-growing file would
+  retrigger every stage on any unrelated edit). Checked: it already isn't,
+  anywhere — only the narrower logic modules (`cds.py`, `smard.py`,
+  `pecd_io.py`, `smard_redispatch.py`, `redispatch_measures.py`) are
+  tracked as deps, matching `mastr-power-capacities-germany`'s convention
+  (`pecd-replication` is inconsistent here — it lists `pecdr/paths.py` as
+  a dep on its analysis/notebook stages, not its acquisition ones,
+  needlessly invalidating those notebook stages' cache on any unrelated
+  path addition). Keep it this way: `paths.py` stays pure path
+  construction with no data-transformation logic, so leaving it untracked
+  is safe — if it ever needs real logic, that logic belongs in its own
+  module (same pattern as the existing ones), not inline in `paths.py`.
+
+### 2026-08-26 — First EDA pass surfaced one real correction
+
+- Initially computed netztransparenz's "how much of SMARD's onshore
+  wind + PV redispatch figure is captured" using only individually
+  name-attributable measures (`onshore_wind_named` + `pv`), getting 1.7%
+  — technically correct for that narrow question, but a misleading
+  headline number on its own, since it silently excluded real renewable
+  volume sitting under anonymous cluster codes. Fixed by also computing
+  the broader `primary_energy_type == "Erneuerbar"` (minus offshore) sum,
+  which reproduces `pecd-replication`'s own 38.7% finding almost exactly
+  (39.2% here) — the notebook now reports both numbers side by side so
+  the distinction itself is visible, not just the corrected total.
