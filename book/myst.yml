@@ -2,14 +2,14 @@ version: 1
 project:
   title: PECD Power Validity DE
   authors:
-    - name: Your Name
+    - name: Christian Groll
   copyright: '2026'
   exclude:
     - _build
     - Thumbs.db
     - .DS_Store
     - '**.ipynb_checkpoints'
-  github: your-username/your-repo-name
+  github: cgroll/pecd-power-validity-DE
   toc:
     - file: markdown/index.md
     - title: Exploring the data
