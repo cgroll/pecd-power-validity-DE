@@ -224,3 +224,58 @@ stages:
           cache: false
       - output/images/13_wind_offshore_capacity_choropleth.gif:
           cache: false
+
+  build_pecd_potential_panel:
+    cmd: uv run python pipeline/14_build_pecd_potential_panel.py
+    deps:
+      - pipeline/14_build_pecd_potential_panel.py
+      - pkg/potential.py
+      - data/processed/pecd_solar_capacity_factors.parquet
+      - data/processed/pecd_wind_onshore_capacity_factors.parquet
+      - data/processed/pecd_wind_offshore_capacity_factors.parquet
+      - data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      - data/downloads/external/capacity_by_peon_month.parquet
+      - data/downloads/external/capacity_by_peof_month.parquet
+    outs:
+      - data/processed/pecd_potential_panel.parquet
+
+  build_target_panel:
+    cmd: uv run python pipeline/15_build_target_panel.py
+    deps:
+      - pipeline/15_build_target_panel.py
+      - data/downloads/smard/pv.parquet
+      - data/downloads/smard/wind_onshore.parquet
+      - data/downloads/smard/wind_offshore.parquet
+      - data/downloads/smard/load.parquet
+      - data/downloads/smard/price_de_lu.parquet
+    outs:
+      - data/processed/target_panel.parquet
+
+  analyse_potential_vs_observed:
+    cmd: >-
+      MPLBACKEND=Agg uv run jupytext --to notebook --execute
+      --set-kernel python3
+      --output book/notebooks/16_analyse_potential_vs_observed.ipynb
+      pipeline/16_analyse_potential_vs_observed.py &&
+      uv run python pipeline/_strip_jupytext_metadata.py
+      book/notebooks/16_analyse_potential_vs_observed.ipynb
+    deps:
+      - pipeline/16_analyse_potential_vs_observed.py
+      - pkg/potential.py
+      - data/processed/pecd_potential_panel.parquet
+      - data/processed/target_panel.parquet
+      - data/processed/pecd_solar_capacity_factors.parquet
+      - data/processed/pecd_wind_onshore_capacity_factors.parquet
+      - data/processed/pecd_wind_offshore_capacity_factors.parquet
+      - data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      - data/downloads/external/capacity_by_peon_month.parquet
+      - data/downloads/external/capacity_by_peof_month.parquet
+    outs:
+      - book/notebooks/16_analyse_potential_vs_observed.ipynb:
+          cache: false
+      - output/images/16_potential_vs_observed_monthly.png:
+          cache: false
+      - output/images/16_potential_vs_observed_zoom.png:
+          cache: false
+      - output/images/16_potential_vs_observed_scatter.png:
+          cache: false

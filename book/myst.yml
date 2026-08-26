@@ -18,6 +18,9 @@ project:
         - file: notebooks/11_eda_region_maps.ipynb
         - file: notebooks/12_eda_redispatch_comparison.ipynb
         - file: notebooks/13_eda_capacity_over_time.ipynb
+    - title: Potential vs. observed
+      children:
+        - file: notebooks/16_analyse_potential_vs_observed.ipynb
 site:
   options:
     folders: true

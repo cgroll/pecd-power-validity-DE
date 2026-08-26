@@ -312,6 +312,29 @@ class ProjPaths:
         return self.netztransparenz_downloads_path / "redispatch_measures.csv"
 
     # ------------------------------------------------------------------ #
+    # Potential vs. observed analysis                                      #
+    # ------------------------------------------------------------------ #
+
+    @property
+    def pecd_potential_panel_file(self) -> Path:
+        """Germany-wide hourly PECD potential (PECD capacity factor x
+        capacity, summed over region/technology), one column per
+        technology: `potential_solar_mw`, `potential_wind_onshore_mw`,
+        `potential_wind_offshore_mw`. See
+        `pipeline/14_build_pecd_potential_panel.py`.
+        """
+        return self.processed_data_path / "pecd_potential_panel.parquet"
+
+    @property
+    def target_panel_file(self) -> Path:
+        """SMARD's hourly observed generation, load, and day-ahead price,
+        aligned to the same index as `pecd_potential_panel_file`: columns
+        `pv_mw`, `wind_onshore_mw`, `wind_offshore_mw`, `load_mw`,
+        `price_de_lu_eur_mwh`. See `pipeline/15_build_target_panel.py`.
+        """
+        return self.processed_data_path / "target_panel.parquet"
+
+    # ------------------------------------------------------------------ #
     # Helpers                                                              #
     # ------------------------------------------------------------------ #
 

@@ -353,8 +353,8 @@ stages:
       size: 2296648
     - path: pipeline/10_eda_data_availability.py
       hash: md5
-      md5: 649ecd7b21e5ea182582381374204ba8
-      size: 6244
+      md5: 0befdd05ad750326db1ffb492cedc01d
+      size: 7245
     - path: pkg/redispatch_measures.py
       hash: md5
       md5: f7561afeba21582bf154355fa2944681
@@ -362,12 +362,12 @@ stages:
     outs:
     - path: book/notebooks/10_eda_data_availability.ipynb
       hash: md5
-      md5: 4f65d446a9c33e6b72945b234ec16ea7
-      size: 11630
+      md5: 9f3e6fee52c14f174be6dc8cc886e9f2
+      size: 12776
     - path: output/images/10_data_availability_heatmap.png
       hash: md5
-      md5: 0f508e3c8456c8f20cfabd7d78a17f65
-      size: 127382
+      md5: 5993b25514022ce23c92be53e98f777d
+      size: 127383
   eda_region_maps:
     cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
       python3 --output book/notebooks/11_eda_region_maps.ipynb 
@@ -504,3 +504,139 @@ stages:
       hash: md5
       md5: 7050e9b79cc5f24cfe9a6da470134876
       size: 450492
+  build_target_panel:
+    cmd: uv run python pipeline/15_build_target_panel.py
+    deps:
+    - path: data/downloads/smard/load.parquet
+      hash: md5
+      md5: eb9d2aef60a10353e8bc54d02b331892
+      size: 1001971
+    - path: data/downloads/smard/price_de_lu.parquet
+      hash: md5
+      md5: ca35519f46a60325921e97265fa3ca76
+      size: 796860
+    - path: data/downloads/smard/pv.parquet
+      hash: md5
+      md5: 25eba4284b9d1874cae848550cffe2f0
+      size: 984819
+    - path: data/downloads/smard/wind_offshore.parquet
+      hash: md5
+      md5: eb59824312a78181e55ed65e996415d1
+      size: 860757
+    - path: data/downloads/smard/wind_onshore.parquet
+      hash: md5
+      md5: 893706bbd246aa46b820979a06236287
+      size: 1136454
+    - path: pipeline/15_build_target_panel.py
+      hash: md5
+      md5: 5a94197e14ea01bed7046c5d41f1908e
+      size: 2772
+    outs:
+    - path: data/processed/target_panel.parquet
+      hash: md5
+      md5: 8e04ea4fe1680e417c48aa54284d8a1b
+      size: 2353887
+  build_pecd_potential_panel:
+    cmd: uv run python pipeline/14_build_pecd_potential_panel.py
+    deps:
+    - path: data/downloads/external/capacity_by_peof_month.parquet
+      hash: md5
+      md5: 80e7b4e9fae9fdbb32bea88160373ad2
+      size: 7259
+    - path: data/downloads/external/capacity_by_peon_month.parquet
+      hash: md5
+      md5: 007d9f28994339deb239fc0e2d35a333
+      size: 21238
+    - path: data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: 7c150064c796ba705c1d9ec00abae5f1
+      size: 154691
+    - path: data/processed/pecd_solar_capacity_factors.parquet
+      hash: md5
+      md5: f1ac7e3e0f6162d5e04aac0f3a84e1f9
+      size: 51558551
+    - path: data/processed/pecd_wind_offshore_capacity_factors.parquet
+      hash: md5
+      md5: fc0302a6df4558f45f41a11788b71060
+      size: 2929080
+    - path: data/processed/pecd_wind_onshore_capacity_factors.parquet
+      hash: md5
+      md5: 0284b97259860845add1711ae124e113
+      size: 2296648
+    - path: pipeline/14_build_pecd_potential_panel.py
+      hash: md5
+      md5: e39cbd4798f5639729573a8702f449bc
+      size: 3536
+    - path: pkg/potential.py
+      hash: md5
+      md5: 4903a9611474cc88c7eb97eef4a7b4b8
+      size: 3376
+    outs:
+    - path: data/processed/pecd_potential_panel.parquet
+      hash: md5
+      md5: 63ecf1e15cd996d6a65ab12b92614f60
+      size: 3330968
+  analyse_potential_vs_observed:
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/16_analyse_potential_vs_observed.ipynb 
+      pipeline/16_analyse_potential_vs_observed.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
+      book/notebooks/16_analyse_potential_vs_observed.ipynb
+    deps:
+    - path: data/downloads/external/capacity_by_peof_month.parquet
+      hash: md5
+      md5: 80e7b4e9fae9fdbb32bea88160373ad2
+      size: 7259
+    - path: data/downloads/external/capacity_by_peon_month.parquet
+      hash: md5
+      md5: 007d9f28994339deb239fc0e2d35a333
+      size: 21238
+    - path: data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: 7c150064c796ba705c1d9ec00abae5f1
+      size: 154691
+    - path: data/processed/pecd_potential_panel.parquet
+      hash: md5
+      md5: 63ecf1e15cd996d6a65ab12b92614f60
+      size: 3330968
+    - path: data/processed/pecd_solar_capacity_factors.parquet
+      hash: md5
+      md5: f1ac7e3e0f6162d5e04aac0f3a84e1f9
+      size: 51558551
+    - path: data/processed/pecd_wind_offshore_capacity_factors.parquet
+      hash: md5
+      md5: fc0302a6df4558f45f41a11788b71060
+      size: 2929080
+    - path: data/processed/pecd_wind_onshore_capacity_factors.parquet
+      hash: md5
+      md5: 0284b97259860845add1711ae124e113
+      size: 2296648
+    - path: data/processed/target_panel.parquet
+      hash: md5
+      md5: 8e04ea4fe1680e417c48aa54284d8a1b
+      size: 2353887
+    - path: pipeline/16_analyse_potential_vs_observed.py
+      hash: md5
+      md5: 97d5646f1a413333b5704072ab645609
+      size: 11323
+    - path: pkg/potential.py
+      hash: md5
+      md5: 4903a9611474cc88c7eb97eef4a7b4b8
+      size: 3376
+    outs:
+    - path: book/notebooks/16_analyse_potential_vs_observed.ipynb
+      hash: md5
+      md5: 673f3a2e126085a9e0aefd4be9a4cb26
+      size: 20379
+    - path: output/images/16_potential_vs_observed_monthly.png
+      hash: md5
+      md5: 73ea3dfc3f7fb6f6163e2d789d46c25d
+      size: 383786
+    - path: output/images/16_potential_vs_observed_scatter.png
+      hash: md5
+      md5: 2d9498b9293bb42c38cb57b920f0a2c5
+      size: 661969
+    - path: output/images/16_potential_vs_observed_zoom.png
+      hash: md5
+      md5: 01ab6bca9a005d5cf603e4108090ae33
+      size: 415365

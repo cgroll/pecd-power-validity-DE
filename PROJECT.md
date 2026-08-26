@@ -5,8 +5,9 @@ See [AGENTS.md](AGENTS.md) for structure/tooling conventions.
 
 ## Current State
 
-Data-acquisition pipeline plus a first round of exploratory notebooks
-built and verified end-to-end (2026-08-26). See
+Data-acquisition pipeline, exploratory EDA, and the headline
+potential-vs-observed comparison all built and verified end-to-end
+(2026-08-26). See
 [README.md](README.md) for the full problem statement. In short: this
 project checks how well PECD's **official** capacity-factor product,
 weighted by MaStR installed capacity, reconstructs Germany's actual
@@ -114,25 +115,53 @@ reusing instead).
     entity-attribution step (`pipeline/46`); flagged as reusable later if
     the gap-explanation chapters need a finer split.
 
-**Processing / analysis — not yet started**
+**Processing / analysis — potential-vs-observed done (2026-08-26)**
 
-11. `13_build_pecd_potential_panel.py` — PECD capacity factor × capacity,
+11. `13_eda_capacity_over_time.py` — installed capacity is a monthly
+    time-varying snapshot (2015-01 to present), not one fixed fleet size;
+    shows this as a national time series per technology plus three
+    quarterly choropleth GIFs (solar/NUTS2, wind onshore/PEON, wind
+    offshore/PEOF).
+12. `14_build_pecd_potential_panel.py` — PECD capacity factor × capacity,
     per region/technology/month, weighted up to one Germany-wide hourly
     **potential** series per technology (solar, wind onshore, wind
-    offshore). This is the "regional capacity factors → one national
-    estimate" step. Solar needs a (NUTS2 x PECD-technology) weighted sum
-    across all 4 sub-series; wind onshore/offshore are a straight
-    (PEON/PEOF-zone x month) weighted sum — zone codes already match
-    PECD's own column names on both sides.
-12. `14_build_target_panel.py` — SMARD generation + price, hourly, aligned
-    to the same index as the potential panel.
-13. `15_analyse_potential_vs_observed.py` — the headline comparison:
-    potential vs. SMARD reported generation, by technology, full period —
-    the gap this project exists to explain.
-14. `16_analyse_curtailment_gap.py` — how much of the gap each mechanism
+    offshore) — `pkg/potential.py`. Solar: (NUTS2 x PECD-technology)
+    weighted sum across all 4 sub-series; wind onshore/offshore: a
+    straight (PEON/PEOF-zone x month) weighted sum — zone codes already
+    match PECD's own column names on both sides. 3 of PEOF's 6 zones are
+    100% PECD-unmodeled (`NaN` capacity factor, same finding as
+    `pecd-replication`) — handled via NaN-safe summation
+    (`np.nansum`), not zero-fill, with the excluded capacity logged
+    explicitly rather than silently absorbed.
+13. `15_build_target_panel.py` — SMARD generation + price, hourly, aligned
+    to the same index as the potential panel. **Found and fixed a real
+    SMARD data bug** here: PV/wind-onshore's raw files carry an index back
+    to 2016-12-30, two years earlier than wind offshore/load/price, but
+    the values before 2018-10-01 are bogus placeholders (June 2017's daily
+    peak: 87 MW; June 2019's: 30,141 MW — not real generation), with a
+    clean cutover exactly at the DE-LU market area's real creation date.
+    Nulled out rather than kept.
+14. `16_analyse_potential_vs_observed.py` — the headline comparison:
+    potential vs. SMARD reported generation, by technology, full period.
+    On the same 2019-2025 window `pecd-replication` uses (61,368 hours),
+    this project's independently-built potential panel reproduces that
+    project's published "PECD official x MaStR" accuracy numbers almost
+    exactly (solar MAE 0.0158/corr 0.981 vs. their 0.016/0.981; wind
+    onshore MAE 0.0288/corr 0.986 vs. 0.029/0.985; wind offshore MAE
+    0.0857/corr 0.902 vs. 0.094/0.902) — a real cross-project validation.
+    Potential tracks observed generation's actual hour-to-hour shape
+    closely; the gap is overwhelmingly a *level* difference (positive
+    bias, growing at higher output levels) rather than a timing mismatch —
+    confirming the decomposition this project plans (curtailment,
+    negative prices, self-consumption) is the right next step, not a
+    doomed one.
+
+**Still to do**
+
+15. `17_analyse_curtailment_gap.py` — how much of the gap each mechanism
     explains: redispatch-sourced congestion curtailment, and negative
     day-ahead price hours (voluntary curtailment).
-15. `17_analyse_remaining_gap.py` — what's left after both mechanisms
+16. `18_analyse_remaining_gap.py` — what's left after both mechanisms
     (behind-the-meter self-consumption for solar, unmodeled
     maintenance/outages, PECD-product-own bias) and what would be needed
     to close it further.
@@ -144,10 +173,6 @@ reusing instead).
   start), with the negative-price mechanism covering the full period
   instead, or whether the netztransparenz per-measure series (2021-01
   onward) can extend congestion coverage a bit further back.
-- The overall usable backtest window is bounded by SMARD's DE-LU wind
-  offshore/load/price history (2018-09-30 onward), not PECD's or MaStR's
-  own (both cover 2015+) — confirm this is an acceptable window before
-  building the potential/target comparison.
 - Package abbreviation for `init_project.py` — not yet decided/run.
 
 ## Lessons Learned
@@ -230,3 +255,33 @@ reusing instead).
   which reproduces `pecd-replication`'s own 38.7% finding almost exactly
   (39.2% here) — the notebook now reports both numbers side by side so
   the distinction itself is visible, not just the corrected total.
+
+### 2026-08-26 — Potential panel built; found a real SMARD data bug
+
+- Built `pkg/potential.py` (capacity-weighting logic) and the potential/
+  target panel stages. First pass at wind offshore potential came back
+  entirely `NaN`: PECD leaves 3 of PEOF's 6 zones 100% unmodeled (same
+  finding `pecd-replication` made), and `NaN * capacity` poisons a naive
+  `.sum()` even where capacity is genuinely zero. Fixed with
+  `np.nansum` in `compute_potential`, plus a diagnostic
+  (`unmodeled_capacity_share`) that logs how much real capacity sits in
+  the excluded zones rather than silently absorbing it.
+- Comparing potential against SMARD's full 2016-2025 history first showed
+  markedly worse correlation than `pecd-replication`'s published
+  2019-2025-window numbers (solar 0.83 vs. 0.98, onshore 0.79 vs. 0.99) —
+  initially assumed to be "early years are just noisier." Checked
+  directly instead of accepting that explanation: SMARD's PV/wind-onshore
+  raw files return implausibly tiny placeholder values before 2018-10-01
+  (real generation only starts there, at a sub-day-precise cutover), not
+  real early data at all. Once `pipeline/15_build_target_panel.py` nulls
+  those out, the full available window and the 2019-2025 window give
+  **essentially the same accuracy** — confirming the earlier "noisier"
+  read was entirely an artifact of this one bug, not a real early-period
+  effect. This is exactly the kind of finding to chase down rather than
+  paper over with a window restriction that happens to hide it.
+- With both fixes in place, this project's independently-built potential
+  panel reproduces `pecd-replication`'s published accuracy numbers on the
+  same window almost exactly — strong evidence the capacity-weighting
+  implementation here is correct, built from a completely separate
+  codebase that only consumes the two sibling projects' *processed*
+  outputs.

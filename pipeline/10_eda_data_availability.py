@@ -16,10 +16,21 @@
 # different points and update on very different schedules -- PECD's
 # official product is a fixed historical download (2015-2025, no gaps by
 # construction), SMARD's DE-LU-specific series only exist from the DE-LU
-# market area's actual creation (2018-10-01) for three of its five series,
-# and the two redispatch sources start later still (2021, 2022). Any
-# potential-vs-observed comparison later in this project is bounded by the
-# *latest* of these start dates, not the earliest.
+# market area's actual creation (2018-10-01), and the two redispatch
+# sources start later still (2021, 2022). Any potential-vs-observed
+# comparison later in this project is bounded by the *latest* of these
+# start dates, not the earliest.
+#
+# **One source needed a real fix, not just a start-date check.** SMARD's
+# PV and wind-onshore raw files carry an index back to 2016-12-30 --
+# looking available two years earlier than wind offshore/load/price. But
+# checked directly, values before 2018-10-01 are implausibly tiny
+# placeholders, not real generation (June 2017's daily peak: 87 MW; June
+# 2019's: 30,141 MW -- a jump no real two-year capacity growth explains),
+# with a clean cutover exactly at 2018-10-01 00:00. `pipeline/15_build_
+# target_panel.py` nulls these out; the presence table below applies the
+# same correction, otherwise this notebook would itself report two years
+# of data that isn't actually usable.
 
 # %%
 import matplotlib.pyplot as plt
@@ -66,6 +77,9 @@ series_presence["PECD wind offshore CF (PEOF)"] = monthly_presence_from_index(
     pd.read_parquet(paths.pecd_wind_offshore_capacity_factors_file, columns=[]).index
 )
 
+DE_LU_CREATION_DATE = pd.Timestamp("2018-10-01")
+INVALID_BEFORE_CREATION = {"pv", "wind_onshore"}  # see the bogus-placeholder-value finding above
+
 for name, label in [
     ("pv", "SMARD PV generation"),
     ("wind_onshore", "SMARD wind onshore generation"),
@@ -73,7 +87,10 @@ for name, label in [
     ("load", "SMARD load"),
     ("price_de_lu", "SMARD day-ahead price (DE-LU)"),
 ]:
-    series_presence[label] = monthly_presence_from_index(pd.read_parquet(paths.smard_raw_file(name), columns=[]).index)
+    series = pd.read_parquet(paths.smard_raw_file(name))
+    if name in INVALID_BEFORE_CREATION:
+        series = series.loc[series.index >= DE_LU_CREATION_DATE]
+    series_presence[label] = monthly_presence_from_index(series.index)
 
 for name, label in [
     ("solar", "SMARD capacity: solar"),
@@ -138,9 +155,10 @@ plt.show()
 # :name: fig-10-data-availability
 # Monthly data availability across every source this project uses. PECD's
 # official product and the MaStR-derived capacity panels cover the full
-# window; three of SMARD's five hourly series (wind offshore, load, price)
-# only start once the DE-LU market area existed (2018-10); the two
-# redispatch sources start later still (2021-01 and 2022-07).
+# window; all five SMARD series only start once the DE-LU market area
+# existed (2018-10) -- PV/wind onshore's own raw files reach back further,
+# but their pre-2018-10 values are bogus (see above) and excluded here;
+# the two redispatch sources start later still (2021-01 and 2022-07).
 # ```
 
 # %% [markdown]
