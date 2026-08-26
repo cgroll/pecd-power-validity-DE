@@ -664,3 +664,43 @@ stages:
       hash: md5
       md5: d5a83b45fb739f4ebc543765220de8f4
       size: 288123
+  analyse_remaining_gap:
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/18_analyse_remaining_gap.ipynb 
+      pipeline/18_analyse_remaining_gap.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
+      book/notebooks/18_analyse_remaining_gap.ipynb
+    deps:
+    - path: data/downloads/external/capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: dd1d6f1b803629ed59f3b944ccd7e589
+      size: 330102
+    - path: data/downloads/smard/redispatch_by_source.parquet
+      hash: md5
+      md5: 1f60269901d9dc4317f145582c6caf00
+      size: 8974
+    - path: data/processed/pecd_potential_panel.parquet
+      hash: md5
+      md5: 63ecf1e15cd996d6a65ab12b92614f60
+      size: 3330968
+    - path: data/processed/target_panel.parquet
+      hash: md5
+      md5: 8e04ea4fe1680e417c48aa54284d8a1b
+      size: 2353887
+    - path: pipeline/18_analyse_remaining_gap.py
+      hash: md5
+      md5: e6c0de0f7303d19d68a9b1955a832b69
+      size: 9854
+    outs:
+    - path: book/notebooks/18_analyse_remaining_gap.ipynb
+      hash: md5
+      md5: 8ca1e2c8d5fadeef5c111207041d37eb
+      size: 16433
+    - path: output/images/18_solar_feed_in_category_share.png
+      hash: md5
+      md5: 791dc6b6b9d9f080034cc7f35ac52f7b
+      size: 64500
+    - path: output/images/18_wind_residual_by_year.png
+      hash: md5
+      md5: 942257c49420a9ef6b79afcb9f4c1139
+      size: 64566

@@ -307,3 +307,25 @@ stages:
           cache: false
       - output/images/17_gap_by_price_sign.png:
           cache: false
+
+  analyse_remaining_gap:
+    cmd: >-
+      MPLBACKEND=Agg uv run jupytext --to notebook --execute
+      --set-kernel python3
+      --output book/notebooks/18_analyse_remaining_gap.ipynb
+      pipeline/18_analyse_remaining_gap.py &&
+      uv run python pipeline/_strip_jupytext_metadata.py
+      book/notebooks/18_analyse_remaining_gap.ipynb
+    deps:
+      - pipeline/18_analyse_remaining_gap.py
+      - data/processed/pecd_potential_panel.parquet
+      - data/processed/target_panel.parquet
+      - data/downloads/smard/redispatch_by_source.parquet
+      - data/downloads/external/capacity_by_nuts2_month.parquet
+    outs:
+      - book/notebooks/18_analyse_remaining_gap.ipynb:
+          cache: false
+      - output/images/18_wind_residual_by_year.png:
+          cache: false
+      - output/images/18_solar_feed_in_category_share.png:
+          cache: false

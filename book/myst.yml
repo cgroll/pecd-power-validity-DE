@@ -22,6 +22,7 @@ project:
       children:
         - file: notebooks/16_analyse_potential_vs_observed.ipynb
         - file: notebooks/17_analyse_curtailment_gap.ipynb
+        - file: notebooks/18_analyse_remaining_gap.ipynb
 site:
   options:
     folders: true

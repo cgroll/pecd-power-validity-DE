@@ -5,9 +5,10 @@ See [AGENTS.md](AGENTS.md) for structure/tooling conventions.
 
 ## Current State
 
-Data-acquisition pipeline, exploratory EDA, the headline
-potential-vs-observed comparison, and the curtailment-gap decomposition
-all built and verified end-to-end (2026-08-26). See
+The full planned analysis chain — data acquisition, exploratory EDA,
+potential-vs-observed comparison, curtailment-gap decomposition, and the
+remaining-gap synthesis — is built and verified end-to-end (2026-08-26).
+See
 [README.md](README.md) for the full problem statement. In short: this
 project checks how well PECD's **official** capacity-factor product,
 weighted by MaStR installed capacity, reconstructs Germany's actual
@@ -168,15 +169,27 @@ reusing instead).
     negative day-ahead-price hours** than otherwise, for all three
     technologies — a real, if unsized, voluntary-curtailment signature.
 
-**Still to do**
+16. `18_analyse_remaining_gap.py` — what's left after redispatch and
+    negative prices, and what's genuinely closable with public data vs.
+    not. Solar's residual (89% of its gap) lines up plausibly with
+    self-consumption capability (~44% of national solar capacity is
+    registered self-consumption-capable, MaStR feed-in categories) — a
+    plausibility argument, not a direct measurement. Wind's residual does
+    **not** shrink over time as hoped (a "redispatch reporting still
+    maturing" hypothesis, checked and rejected): onshore's stays noisy
+    (52-105% depending on year), and offshore's actually *grows*
+    (18%→45%, 2022→2025) — a genuinely open, unresolved pattern, possibly
+    delayed grid-connection issues for newly commissioned capacity, not
+    confirmable with this project's data. This is the project's planned
+    analysis chain complete, end to end.
 
-16. `18_analyse_remaining_gap.py` — what's left after both mechanisms
-    (behind-the-meter self-consumption for solar, unmodeled
-    maintenance/outages, PECD-product-own bias) and what would be needed
-    to close it further.
+**Possible follow-ups (not planned, not started)**
 
-**Open questions**
-
+- Confirm or rule out the growing offshore residual's likely driver
+  (delayed grid connections for new capacity) — would need plant-level
+  commissioning/grid-connection dates this project doesn't have.
+- A calibrated (not just descriptive) negative-price curtailment volume
+  estimate, the way `pecd-replication`'s own curve-fitting does.
 - Package abbreviation for `init_project.py` — not yet decided/run
   (functionally optional; `pkg` works fine as-is, see Lessons Learned).
 
@@ -343,3 +356,25 @@ reusing instead).
   entirely) — and the gap runs ~5x larger during negative-price hours
   for all three technologies, a real if unsized voluntary-curtailment
   signature.
+
+### 2026-08-26 — Remaining-gap synthesis; a hypothesis checked and rejected
+
+- Built `18_analyse_remaining_gap.py`, the last planned analysis stage.
+  Went in with a specific hypothesis — that wind's residual (gap minus
+  reported redispatch) should *shrink* year over year as Redispatch 2.0's
+  renewable reporting matures (already evidenced in this project's own
+  redispatch-comparison notebook). Checked directly rather than assumed:
+  **wrong for offshore**, whose residual share actually grows (18% in
+  2022-2023 to ~40-45% in 2024-2025) — the opposite direction. Reported
+  the actual pattern and a plausible-but-unconfirmed candidate mechanism
+  (delayed grid connections for newly commissioned capacity) instead of
+  forcing the data to fit the original hypothesis.
+- For solar, used MaStR's feed-in-category capacity shares
+  (`capacity_by_nuts2_month.parquet`) as a plausibility check for
+  self-consumption explaining most of the 89% redispatch doesn't cover:
+  ~44% of national solar capacity is registered self-consumption-capable
+  (up from ~20% in 2015) — plausible, not a direct measurement, and the
+  notebook is explicit about that distinction throughout.
+- Closes out the originally planned analysis chain (potential → target →
+  potential-vs-observed → curtailment gap → remaining gap). What's left
+  is listed as possible follow-ups, not a queued next step.
