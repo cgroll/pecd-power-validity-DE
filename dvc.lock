@@ -444,3 +444,63 @@ stages:
       hash: md5
       md5: 4dd5ad9b012c2495d7b37b827aa3bf64
       size: 266135
+  eda_capacity_over_time:
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/13_eda_capacity_over_time.ipynb 
+      pipeline/13_eda_capacity_over_time.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
+      book/notebooks/13_eda_capacity_over_time.ipynb
+    deps:
+    - path: data/downloads/country_borders.geojson
+      hash: md5
+      md5: dd213118020e9d2604bf9f29b540bfa5
+      size: 1758506
+    - path: data/downloads/external/capacity_by_peof_month.parquet
+      hash: md5
+      md5: 80e7b4e9fae9fdbb32bea88160373ad2
+      size: 7259
+    - path: data/downloads/external/capacity_by_peon_month.parquet
+      hash: md5
+      md5: 007d9f28994339deb239fc0e2d35a333
+      size: 21238
+    - path: data/downloads/external/solar_capacity_by_nuts2_month.parquet
+      hash: md5
+      md5: 7c150064c796ba705c1d9ec00abae5f1
+      size: 154691
+    - path: data/downloads/nuts_regions.geojson
+      hash: md5
+      md5: deef50e6af7cf70882303055901eae9c
+      size: 7149154
+    - path: data/downloads/pecd/peof_region_mask.nc
+      hash: md5
+      md5: 388b1ec71e500c49fba331e02678be8c
+      size: 34665619
+    - path: data/downloads/pecd/peon_region_mask.nc
+      hash: md5
+      md5: 3564693594af076c9fc01fe336b829d3
+      size: 85514663
+    - path: pipeline/13_eda_capacity_over_time.py
+      hash: md5
+      md5: a9620041334be1522b4b51e8649c4d4a
+      size: 9868
+    outs:
+    - path: book/notebooks/13_eda_capacity_over_time.ipynb
+      hash: md5
+      md5: 73af754f46f6319df083034b9ec3ecd0
+      size: 16132
+    - path: output/images/13_national_capacity_over_time.png
+      hash: md5
+      md5: 4b9c5153d2b22a94a2ecea7108682586
+      size: 75290
+    - path: output/images/13_solar_capacity_choropleth.gif
+      hash: md5
+      md5: b0f0da508cedb8a3356185eb0e24a61b
+      size: 1846033
+    - path: output/images/13_wind_offshore_capacity_choropleth.gif
+      hash: md5
+      md5: 0763980bb3fbc60f4c696bcf8495b495
+      size: 592989
+    - path: output/images/13_wind_onshore_capacity_choropleth.gif
+      hash: md5
+      md5: 7050e9b79cc5f24cfe9a6da470134876
+      size: 450492

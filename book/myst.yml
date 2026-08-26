@@ -17,6 +17,7 @@ project:
         - file: notebooks/10_eda_data_availability.ipynb
         - file: notebooks/11_eda_region_maps.ipynb
         - file: notebooks/12_eda_redispatch_comparison.ipynb
+        - file: notebooks/13_eda_capacity_over_time.ipynb
 site:
   options:
     folders: true

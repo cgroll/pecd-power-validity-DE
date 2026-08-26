@@ -195,3 +195,32 @@ stages:
           cache: false
       - output/images/12_redispatch_sources_side_by_side.png:
           cache: false
+
+  eda_capacity_over_time:
+    cmd: >-
+      MPLBACKEND=Agg uv run jupytext --to notebook --execute
+      --set-kernel python3
+      --output book/notebooks/13_eda_capacity_over_time.ipynb
+      pipeline/13_eda_capacity_over_time.py &&
+      uv run python pipeline/_strip_jupytext_metadata.py
+      book/notebooks/13_eda_capacity_over_time.ipynb
+    deps:
+      - pipeline/13_eda_capacity_over_time.py
+      - data/downloads/nuts_regions.geojson
+      - data/downloads/country_borders.geojson
+      - data/downloads/pecd/peon_region_mask.nc
+      - data/downloads/pecd/peof_region_mask.nc
+      - data/downloads/external/capacity_by_peon_month.parquet
+      - data/downloads/external/capacity_by_peof_month.parquet
+      - data/downloads/external/solar_capacity_by_nuts2_month.parquet
+    outs:
+      - book/notebooks/13_eda_capacity_over_time.ipynb:
+          cache: false
+      - output/images/13_national_capacity_over_time.png:
+          cache: false
+      - output/images/13_solar_capacity_choropleth.gif:
+          cache: false
+      - output/images/13_wind_onshore_capacity_choropleth.gif:
+          cache: false
+      - output/images/13_wind_offshore_capacity_choropleth.gif:
+          cache: false
