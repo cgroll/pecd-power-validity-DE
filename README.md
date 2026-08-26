@@ -17,6 +17,35 @@ unavailability, price-driven curtailment at negative prices, and
 grid-congestion curtailment/redispatch) rather than left as unexplained
 noise?
 
+## Current status
+
+The full planned analysis chain is built: PECD potential vs. SMARD
+observed generation, then decomposing the gap between them by known
+mechanism, 2019-2025 (the window `pecd-replication` also uses):
+
+| Technology | Potential-vs-observed (nMAE / corr) | Redispatch-explained share of gap | After subtracting redispatch (nMAE) |
+|---|---|---|---|
+| Solar | 17.7% / 0.981 | 11.2% | 19.0% (barely moves) |
+| Wind onshore | 13.9% / 0.986 | 33.3% | 6.7% |
+| Wind offshore | 24.8% / 0.902 | 70.7% | 8.0% |
+
+(`nMAE` = mean absolute error relative to that technology's own mean
+observed output; the capacity-factor-normalized accuracy numbers land
+within rounding distance of `pecd-replication`'s own published table — a
+real cross-project validation, since this project's potential panel is
+built by an entirely separate pipeline.)
+
+Redispatch curtailment explains most of wind offshore's gap, a third of
+onshore's, but little of solar's — solar's own remaining gap (89% of it)
+lines up plausibly with behind-the-meter self-consumption capability
+(~44% of national solar capacity is registered self-consumption-capable),
+though that's a plausibility argument from capacity shares, not a direct
+measurement. Wind offshore's own residual, unexpectedly, *grows* over
+2022-2025 rather than shrinking as redispatch reporting matures — a
+genuinely open pattern, not resolved here. See the book (once published)
+for the full notebook-by-notebook detail and [PROJECT.md](PROJECT.md) for
+the running log of what was checked and found along the way.
+
 ## The core problem: potential ≠ observed generation
 
 PECD capacity factor × MaStR installed capacity is **not** directly
