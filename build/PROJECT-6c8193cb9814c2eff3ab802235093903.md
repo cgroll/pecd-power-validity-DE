@@ -412,3 +412,27 @@ reusing instead).
   barely (21.1% → 19.0%) — consistent with redispatch never being solar's
   main gap driver. Also added the residual as % of that month's observed
   generation (not just absolute GWh) for the same reason.
+
+### 2026-08-27 — Offshore at hourly resolution: the monthly view was flattering
+
+- User pointed out that netztransparenz's per-measure export (already
+  downloaded, already used in notebook 12) has real start/end timestamps
+  (often 15-minute steps) back to 2021-01 — finer and longer than SMARD's
+  monthly-only, 2022-07-starting series. Added
+  `pkg/redispatch_measures.distribute_to_hourly` (spreads each measure's
+  MWh across the hours it spans, weighted by overlap, conserving the
+  total exactly) and rebuilt the offshore match-quality check at native
+  hourly resolution, 2021-2025. Offshore-only: netztransparenz's
+  technology label is only reliable there (onshore/PV are overwhelmingly
+  anonymous "ambiguous" codes, per notebook 12).
+- **The hourly result is a materially more modest improvement than the
+  monthly one**: nMAE 27.9% → 18.3% (hourly, netztransparenz) vs. the
+  monthly comparison's 24.5% → 8.0% (SMARD). Monthly aggregation smooths
+  away hour-to-hour timing mismatches between when curtailment actually
+  happened and this notebook's even-spread-within-each-measure
+  assumption, so it ends up crediting redispatch with fixing *shape*
+  problems it never touches, only the *level*. Worth remembering broadly,
+  not just for this notebook: a monthly-aggregate accuracy check can look
+  much better than an hourly one for the same underlying data, and the
+  hourly number is the one that matters for anything eventually judged at
+  hourly resolution (e.g. a forecast).
