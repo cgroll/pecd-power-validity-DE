@@ -293,9 +293,11 @@ stages:
     deps:
       - pipeline/17_analyse_curtailment_gap.py
       - pkg/potential.py
+      - pkg/redispatch_measures.py
       - data/processed/pecd_potential_panel.parquet
       - data/processed/target_panel.parquet
       - data/downloads/smard/redispatch_by_source.parquet
+      - data/downloads/netztransparenz/redispatch_measures.csv
       - data/processed/pecd_solar_capacity_factors.parquet
       - data/processed/pecd_wind_onshore_capacity_factors.parquet
       - data/processed/pecd_wind_offshore_capacity_factors.parquet
@@ -308,6 +310,8 @@ stages:
       - output/images/17_gap_vs_redispatch.png:
           cache: false
       - output/images/17_gap_by_price_sign.png:
+          cache: false
+      - output/images/17_offshore_hourly_adjusted.png:
           cache: false
 
   analyse_remaining_gap:

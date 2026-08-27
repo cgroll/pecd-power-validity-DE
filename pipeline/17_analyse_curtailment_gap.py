@@ -33,10 +33,12 @@ import pandas as pd
 
 from pkg.paths import ProjPaths
 from pkg.potential import broadcast_capacity_to_hourly
+from pkg.redispatch_measures import distribute_to_hourly, load_redispatch_measures
 
 paths = ProjPaths()
 
 TECH_COLORS = {"solar": "#eda100", "wind_onshore": "#2a78d6", "wind_offshore": "#1baf7a"}
+POTENTIAL_COLOR = "#7a7a7a"
 PAIRS = {
     "solar": ("potential_solar_mw", "pv_mw"),
     "wind_onshore": ("potential_wind_onshore_mw", "wind_onshore_mw"),
@@ -228,6 +230,95 @@ match_quality_table.round(2)
 # gap driver in the first place.
 
 # %% [markdown]
+# ## Offshore, at hourly resolution: netztransparenz's per-measure data
+#
+# SMARD's monthly series above starts 2022-07 and can't resolve anything
+# finer than a month. netztransparenz's per-measure export (already used
+# in [the redispatch-comparison notebook](../notebooks/12_eda_redispatch_comparison.ipynb))
+# carries real start/end timestamps (often 15-minute steps) back to
+# 2021-01 -- but its technology label is only reliable for offshore wind
+# (per-measure names are almost always individually identifiable there;
+# onshore wind/PV are overwhelmingly anonymous "ambiguous" cluster codes).
+# So this section is offshore-only: distributing each measure's MWh
+# across the hours it spans (conserving the total exactly) gives an
+# actual hourly curtailment series, letting the match-quality check be
+# redone at the resolution PECD/SMARD data natively has, not squeezed
+# down to SMARD's monthly grid -- and over a longer window besides.
+
+# %%
+measures = load_redispatch_measures(paths.redispatch_measures_file)
+offshore_reduction = measures.loc[(measures["direction"] == "reduction") & (measures["tech"] == "offshore_wind")]
+
+hourly_curtailment_mwh = distribute_to_hourly(offshore_reduction["start"], offshore_reduction["end"], offshore_reduction["mwh"])
+print(f"{len(offshore_reduction):,} offshore measures -> {len(hourly_curtailment_mwh):,} non-zero hourly bins")
+print(f"Total: {hourly_curtailment_mwh.sum():,.0f} MWh (matches the raw per-measure sum exactly, by construction)")
+
+# %%
+NETZTRANSPARENZ_WINDOW = df.loc["2021-01-01":"2025-12-31"].index
+offshore_hourly = df.loc[NETZTRANSPARENZ_WINDOW, ["potential_wind_offshore_mw", "wind_offshore_mw"]].copy()
+# Reindex (not join) so hours with zero curtailment -- the overwhelming
+# majority -- correctly become 0, not a dropped/missing row.
+offshore_hourly["curtailment_mw"] = hourly_curtailment_mwh.reindex(NETZTRANSPARENZ_WINDOW, fill_value=0.0)
+offshore_hourly["adjusted_potential_mw"] = offshore_hourly["potential_wind_offshore_mw"] - offshore_hourly["curtailment_mw"]
+offshore_hourly = offshore_hourly.dropna()
+
+
+def match_quality_gw(observed_mw: pd.Series, modeled_mw: pd.Series) -> dict:
+    err_gw = (modeled_mw - observed_mw) / 1000
+    return {
+        "mae_gw": err_gw.abs().mean(),
+        "bias_gw": err_gw.mean(),
+        "nmae_pct": err_gw.abs().mean() / (observed_mw.mean() / 1000) * 100,
+        "corr": modeled_mw.corr(observed_mw),
+    }
+
+
+hourly_match = pd.DataFrame([
+    {"stage": "raw potential", **match_quality_gw(offshore_hourly["wind_offshore_mw"], offshore_hourly["potential_wind_offshore_mw"])},
+    {"stage": "curtailment-adjusted (hourly, netztransparenz, 2021-2025)", **match_quality_gw(offshore_hourly["wind_offshore_mw"], offshore_hourly["adjusted_potential_mw"])},
+]).set_index("stage")
+hourly_match.round(3)
+
+# %% [markdown]
+# **This does not tell quite the same story as the monthly comparison.**
+# The SMARD-monthly-based result for offshore (further up) showed nMAE
+# dropping from 24.5% to 8.0%; this hourly, longer-window version shows a
+# real but far more modest improvement (27.9% -> 18.3%, corr 0.888 ->
+# 0.930). Monthly aggregation flatters the "after" number: summing a
+# whole month's hours before comparing smooths away any hour-to-hour
+# mismatch between when curtailment actually happened and when this
+# notebook's even-spread-across-the-measure's-duration assumption places
+# it, so the monthly view credits redispatch with fixing *shape* problems
+# it never touches, only the *level*. The hourly check is the more honest
+# one for anything that would eventually need hour-level accuracy (e.g. a
+# forecast) -- and by that measure, curtailment closes real ground but
+# leaves a bigger remaining gap than the monthly comparison suggested.
+
+# %%
+zoom_window = offshore_hourly.loc["2023-03-01":"2023-03-21"]
+
+fig, ax = plt.subplots(figsize=(13, 4))
+ax.plot(zoom_window.index, zoom_window["potential_wind_offshore_mw"], label="PECD potential", color=POTENTIAL_COLOR, linewidth=1.1, linestyle="--")
+ax.plot(zoom_window.index, zoom_window["adjusted_potential_mw"], label="Potential minus curtailment (hourly)", color="#3a3a3a", linewidth=1.2, linestyle=":")
+ax.plot(zoom_window.index, zoom_window["wind_offshore_mw"], label="SMARD observed", color=TECH_COLORS["wind_offshore"], linewidth=1.3)
+ax.set_ylabel("MW")
+ax.set_title("Wind offshore: potential, curtailment-adjusted potential, and observed, 2023-03-01 to 2023-03-21")
+ax.legend(loc="upper left")
+fig.tight_layout()
+fig.savefig(paths.images_path / "17_offshore_hourly_adjusted.png", dpi=150, bbox_inches="tight")
+plt.show()
+
+# %% [markdown]
+# ```{figure} ../../output/images/17_offshore_hourly_adjusted.png
+# :name: fig-17-offshore-hourly-adjusted
+# Same three-week window as notebook 16's zoom chart. The
+# curtailment-adjusted line (dotted) sits visibly closer to SMARD's
+# observed generation (solid) than raw potential (dashed) does, hour by
+# hour -- not just in the monthly-aggregate sense the SMARD-based
+# comparison above showed.
+# ```
+
+# %% [markdown]
 # ## What's left after subtracting reported redispatch curtailment?
 #
 # Monthly gap minus monthly redispatch curtailment, same 2022-07-onward
@@ -257,6 +348,13 @@ display(residual_pct_of_observed.describe().loc[["mean", "std", "min", "max"]].r
 #   three technologies -- consistent with voluntary curtailment being a
 #   real, additional contributor, though this notebook doesn't attempt to
 #   size it the way `pecd-replication`'s calibrated curve does.
+# - Offshore's hourly, netztransparenz-based version tells a *more
+#   modest* story than SMARD's monthly comparison (nMAE 27.9% -> 18.3%,
+#   vs. the monthly view's 24.5% -> 8.0%): monthly aggregation smooths
+#   away hour-to-hour timing mismatches and credits redispatch with
+#   fixing the *level* only, not the *shape* -- the hourly check is the
+#   more honest one for anything that would eventually need hour-level
+#   accuracy.
 # - What's left after both mechanisms (behind-the-meter self-consumption
 #   for solar in particular, unmodeled maintenance/outages, and this
 #   project's own potential-side bias) is the subject of the next

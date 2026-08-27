@@ -33,7 +33,12 @@ mechanism, 2019-2025 (the window `pecd-replication` also uses):
 observed output; the capacity-factor-normalized accuracy numbers land
 within rounding distance of `pecd-replication`'s own published table — a
 real cross-project validation, since this project's potential panel is
-built by an entirely separate pipeline.)
+built by an entirely separate pipeline. The "after redispatch" column is
+monthly, matching SMARD's own resolution — redoing it at native **hourly**
+resolution for offshore, using netztransparenz's per-measure export
+instead, gives a materially more modest improvement (27.9% → 18.3%, not
+24.5% → 8.0%): monthly aggregation smooths away hour-to-hour timing
+mismatches and flatters how much redispatch actually fixes.)
 
 Redispatch curtailment explains most of wind offshore's gap, a third of
 onshore's, but little of solar's — solar's own remaining gap (89% of it)

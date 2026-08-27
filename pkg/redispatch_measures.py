@@ -160,3 +160,28 @@ def load_redispatch_measures(path) -> pd.DataFrame:
     })
     tidy["tech"] = tidy["entity"].apply(classify_entity_name)
     return tidy
+
+
+def distribute_to_hourly(starts: pd.Series, ends: pd.Series, values: pd.Series) -> pd.Series:
+    """Spread each (start, end, value) measure across the hourly bins it
+    overlaps, weighted by overlap duration -- total value is conserved
+    exactly (each measure's `value` is split proportionally to how much
+    of its own duration falls in each hour, so the pieces sum back to the
+    original value). Real start/end timestamps are often sub-hourly
+    (15-minute steps) and can span multiple hours, unlike SMARD's
+    monthly redispatch-by-source series.
+    """
+    hourly: dict[pd.Timestamp, float] = {}
+    for start, end, value in zip(starts, ends, values):
+        duration_h = (end - start).total_seconds() / 3600
+        if duration_h <= 0:
+            continue
+        first_hour = start.floor("h")
+        last_hour = (end - pd.Timedelta(seconds=1)).floor("h")
+        for hour_start in pd.date_range(first_hour, last_hour, freq="h"):
+            hour_end = hour_start + pd.Timedelta(hours=1)
+            overlap_h = (min(end, hour_end) - max(start, hour_start)).total_seconds() / 3600
+            if overlap_h <= 0:
+                continue
+            hourly[hour_start] = hourly.get(hour_start, 0.0) + value * overlap_h / duration_h
+    return pd.Series(hourly, dtype=float).sort_index()

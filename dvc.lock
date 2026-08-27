@@ -109,13 +109,13 @@ stages:
       size: 946
     - path: pkg/redispatch_measures.py
       hash: md5
-      md5: f7561afeba21582bf154355fa2944681
-      size: 7275
+      md5: cb80058e3de43bf3dc20bfa0c58ac723
+      size: 8581
     outs:
     - path: data/downloads/netztransparenz/redispatch_measures.csv
       hash: md5
-      md5: b8cc993c9458c37669a7f959e149d5c3
-      size: 16343084
+      md5: 006568f8bf14f76aab4d2d0f956771c8
+      size: 16354286
   download_pecd_capacity_factors:
     cmd: uv run python pipeline/01_download_pecd_capacity_factors.py
     deps:
@@ -233,10 +233,10 @@ stages:
       md5: deef50e6af7cf70882303055901eae9c
       size: 7149154
   eda_data_availability:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/10_eda_data_availability.ipynb
-      pipeline/10_eda_data_availability.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/10_eda_data_availability.ipynb 
+      pipeline/10_eda_data_availability.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/10_eda_data_availability.ipynb
     deps:
     - path: data/downloads/external/capacity_by_nuts2_month.parquet
@@ -329,10 +329,10 @@ stages:
       md5: 5993b25514022ce23c92be53e98f777d
       size: 127383
   eda_region_maps:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/11_eda_region_maps.ipynb
-      pipeline/11_eda_region_maps.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/11_eda_region_maps.ipynb 
+      pipeline/11_eda_region_maps.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/11_eda_region_maps.ipynb
     deps:
     - path: data/downloads/country_borders.geojson
@@ -373,10 +373,10 @@ stages:
       md5: bef767b897c8787d4affc4838dd21ea0
       size: 405600
   eda_redispatch_comparison:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/12_eda_redispatch_comparison.ipynb
-      pipeline/12_eda_redispatch_comparison.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/12_eda_redispatch_comparison.ipynb 
+      pipeline/12_eda_redispatch_comparison.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/12_eda_redispatch_comparison.ipynb
     deps:
     - path: data/downloads/netztransparenz/redispatch_measures.csv
@@ -405,10 +405,10 @@ stages:
       md5: 4dd5ad9b012c2495d7b37b827aa3bf64
       size: 266135
   eda_capacity_over_time:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/13_eda_capacity_over_time.ipynb
-      pipeline/13_eda_capacity_over_time.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/13_eda_capacity_over_time.ipynb 
+      pipeline/13_eda_capacity_over_time.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/13_eda_capacity_over_time.ipynb
     deps:
     - path: data/downloads/country_borders.geojson
@@ -537,10 +537,10 @@ stages:
       md5: 63ecf1e15cd996d6a65ab12b92614f60
       size: 3330968
   analyse_potential_vs_observed:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/16_analyse_potential_vs_observed.ipynb
-      pipeline/16_analyse_potential_vs_observed.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/16_analyse_potential_vs_observed.ipynb 
+      pipeline/16_analyse_potential_vs_observed.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/16_analyse_potential_vs_observed.ipynb
     deps:
     - path: data/downloads/external/capacity_by_peof_month.parquet
@@ -605,10 +605,10 @@ stages:
       md5: 01ab6bca9a005d5cf603e4108090ae33
       size: 415365
   analyse_curtailment_gap:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/17_analyse_curtailment_gap.ipynb
-      pipeline/17_analyse_curtailment_gap.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/17_analyse_curtailment_gap.ipynb 
+      pipeline/17_analyse_curtailment_gap.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/17_analyse_curtailment_gap.ipynb
     deps:
     - path: data/downloads/external/capacity_by_peof_month.parquet
@@ -623,6 +623,10 @@ stages:
       hash: md5
       md5: 7c150064c796ba705c1d9ec00abae5f1
       size: 154691
+    - path: data/downloads/netztransparenz/redispatch_measures.csv
+      hash: md5
+      md5: 006568f8bf14f76aab4d2d0f956771c8
+      size: 16354286
     - path: data/downloads/smard/redispatch_by_source.parquet
       hash: md5
       md5: 1f60269901d9dc4317f145582c6caf00
@@ -649,17 +653,21 @@ stages:
       size: 2353887
     - path: pipeline/17_analyse_curtailment_gap.py
       hash: md5
-      md5: ac13156c5efa9b5ccdb1a09972ba0bb0
-      size: 12336
+      md5: f0fda8e1cfff09d2d4685e8c8a8d1059
+      size: 17911
     - path: pkg/potential.py
       hash: md5
       md5: 4903a9611474cc88c7eb97eef4a7b4b8
       size: 3376
+    - path: pkg/redispatch_measures.py
+      hash: md5
+      md5: cb80058e3de43bf3dc20bfa0c58ac723
+      size: 8581
     outs:
     - path: book/notebooks/17_analyse_curtailment_gap.ipynb
       hash: md5
-      md5: 8055c5f209b9b4988c5e67034609e893
-      size: 30438
+      md5: 43d927edd6728e2a66d6046cb1cace13
+      size: 41026
     - path: output/images/17_gap_by_price_sign.png
       hash: md5
       md5: cea8249c998709ab99f733a919821bb2
@@ -668,11 +676,15 @@ stages:
       hash: md5
       md5: d5a83b45fb739f4ebc543765220de8f4
       size: 288123
+    - path: output/images/17_offshore_hourly_adjusted.png
+      hash: md5
+      md5: 74280f0b755a15f0acf54174cfebd681
+      size: 225795
   analyse_remaining_gap:
-    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel
-      python3 --output book/notebooks/18_analyse_remaining_gap.ipynb
-      pipeline/18_analyse_remaining_gap.py && uv run python
-      pipeline/_strip_jupytext_metadata.py
+    cmd: MPLBACKEND=Agg uv run jupytext --to notebook --execute --set-kernel 
+      python3 --output book/notebooks/18_analyse_remaining_gap.ipynb 
+      pipeline/18_analyse_remaining_gap.py && uv run python 
+      pipeline/_strip_jupytext_metadata.py 
       book/notebooks/18_analyse_remaining_gap.ipynb
     deps:
     - path: data/downloads/external/capacity_by_nuts2_month.parquet
