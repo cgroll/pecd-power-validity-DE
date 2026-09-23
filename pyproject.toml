@@ -24,6 +24,7 @@ dependencies = [
     "xarray>=2024.9.0",
     "netcdf4>=1.7.0",
     "pillow>=10.0.0",
+    "dagster>=1.13.24",
 ]
 
 [build-system]
